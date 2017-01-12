@@ -1,0 +1,7 @@
+# Editor files
+*~
+*.swp
+
+# Java files
+*.class
+
