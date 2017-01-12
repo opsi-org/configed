@@ -1,6 +1,9 @@
 # Editor files
 *~
 *.swp
+*-
+*txt
+keepdate
 
 # Java files
 *.class
