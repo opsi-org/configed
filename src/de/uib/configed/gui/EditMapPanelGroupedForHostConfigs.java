@@ -36,7 +36,7 @@ public class EditMapPanelGroupedForHostConfigs extends de.uib.utilities.datapane
 	
 	
 	protected JPopupMenu popup0;
-	protected JPopupMenu popup1;
+	protected JPopupMenu popupForUserpathes;
 	
 	protected JMenuItem popupItemDeleteEntry;
 	
@@ -50,17 +50,19 @@ public class EditMapPanelGroupedForHostConfigs extends de.uib.utilities.datapane
 	{
 		super(tableCellRenderer, keylistExtendible, keylistEditable, reloadable, actor);
 			
-		
+		/*
 		popupItemDeleteEntry = new JMenuItem( configed.getResourceValue("EditMapPanel.PopupMenu.RemoveEntry"));
 			
 		popupItemDeleteEntry.addActionListener(
 			new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e){
+					logging.info(this, "deleteUser");
 					deleteUser();
 				}
 			}
 		);
+		*/
 		
 		
 		popup0 = new PopupMenuTrait(new Integer[]{
@@ -88,9 +90,10 @@ public class EditMapPanelGroupedForHostConfigs extends de.uib.utilities.datapane
 				}
 			;
 			
-		popup1 = new PopupMenuTrait(new Integer[]{
+		popupForUserpathes = new PopupMenuTrait(new Integer[]{
 										//PopupMenuTrait.POPUP_SAVE,
-										PopupMenuTrait.POPUP_RELOAD
+										PopupMenuTrait.POPUP_RELOAD,
+										PopupMenuTrait.POPUP_DELETE
 			})
 				{
 					public void action(int p)
@@ -107,12 +110,20 @@ public class EditMapPanelGroupedForHostConfigs extends de.uib.utilities.datapane
 							case PopupMenuTrait.POPUP_SAVE:
 								//actor.saveData();
 								break;
+								
+							case PopupMenuTrait.POPUP_DELETE:
+								//actor.deleteData();
+								deleteUser();
+								break;
+											
 						}
 						
 					}
 				}
 			;
-		
+		((PopupMenuTrait) popupForUserpathes).setText( PopupMenuTrait.POPUP_DELETE, 
+			configed.getResourceValue("EditMapPanelGroupedForHostConfigs.removeValuesForUser"));
+			
 		MouseListener popupListener0 = new utils.PopupMouseListener(popup0){
 			@Override
 			protected void maybeShowPopup(MouseEvent e) {
@@ -129,9 +140,9 @@ public class EditMapPanelGroupedForHostConfigs extends de.uib.utilities.datapane
 		tree.addMouseListener(popupListener0);
 		
 		
-		popup1.add( popupItemDeleteEntry );
+		//popupForUserpathes.add( popupItemDeleteEntry );
 		
-		MouseListener popupListener1 = new utils.PopupMouseListener(popup1){
+		MouseListener popupListenerForUserpathes = new utils.PopupMouseListener(popupForUserpathes){
 			@Override
 			protected void maybeShowPopup(MouseEvent e) {
 				if (e.isPopupTrigger()) {
@@ -142,7 +153,7 @@ public class EditMapPanelGroupedForHostConfigs extends de.uib.utilities.datapane
 				}
 			}
 		};
-		tree.addMouseListener(popupListener1);
+		tree.addMouseListener(popupListenerForUserpathes);
 		
 		
 		

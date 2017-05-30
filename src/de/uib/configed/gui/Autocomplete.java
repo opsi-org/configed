@@ -5,6 +5,7 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.BadLocationException;
+import de.uib.utilities.logging.*;
 
 public class Autocomplete implements DocumentListener {
 
@@ -31,15 +32,21 @@ public class Autocomplete implements DocumentListener {
 
 	@Override
 	public void changedUpdate(DocumentEvent ev) 
-	{ }
+	{ 
+		//logging.info(this,"changedUpdate " + ev);
+	}
 
 	@Override
 	public void removeUpdate(DocumentEvent ev) 
-	{ }
+	{ 
+		//logging.info(this,"removeUpdate " + ev);
+	}
 
 	@Override
 	public void insertUpdate(DocumentEvent ev) 
 	{
+		//logging.info(this,"insertUpdate " + ev);
+		
 		if (ev.getLength() != 1) return;
 
 		int pos = ev.getOffset();
@@ -49,7 +56,7 @@ public class Autocomplete implements DocumentListener {
 			content = textField.getText(0, pos + 1);
 		} catch (BadLocationException e) 
 		{
-	  		e.printStackTrace();
+	  		logging.logTrace(e);
 		}
 
 		// Find where the word starts

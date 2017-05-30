@@ -35,7 +35,7 @@ public class PanelEnterLicence extends MultiTablePanel
 	private int splitPaneHMargin = 1;
 
 	protected int minVSize = 85;
-	protected int maxHSize = 800;
+	protected int maxHSize = 1000;
 	protected int hSizePanelLicencepools = 600;
 
 	protected int minFieldWidth = 40;

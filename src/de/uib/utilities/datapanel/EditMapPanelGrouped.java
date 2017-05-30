@@ -124,7 +124,7 @@ public class EditMapPanelGrouped extends DefaultEditMapPanel
 				{
 					public void action(int p)
 					{
-						logging.info(this, "popup " + p);
+						logging.info(this, "( EditMapPanelGrouped ) popup " + p);
 						
 						switch(p)
 						{
@@ -174,7 +174,7 @@ public class EditMapPanelGrouped extends DefaultEditMapPanel
 					int row = tree.getRowForPath(p); 
 					
 					actor.reloadData();
-					//logging.info(this, "reloaded, return to " + p);
+					logging.info(this, "reloaded, return to " + p);
 					if (p != null)
 					{
 						//logging.info(this, "reloaded, return to " + row);
@@ -184,9 +184,10 @@ public class EditMapPanelGrouped extends DefaultEditMapPanel
 					}
 				}
 					
-				@Override
+				//@Override
 				protected JPopupMenu definePopup()
 				{
+					logging.info(this, " (EditMapPanelGrouped) definePopup ");
 					JPopupMenu result
 					
 						= new PopupMenuTrait(new Integer[]{
@@ -222,6 +223,11 @@ public class EditMapPanelGrouped extends DefaultEditMapPanel
 							}
 						;
 					
+					//result.addSeparator();
+					/*result.addSeparator();
+					JMenuItem popupRemoveClientEntry  = new JMenuItem("remove client entry");
+					result.add( popupRemoveClientEntry );
+					*/
 					return result;
 				}
 			};
@@ -516,6 +522,14 @@ public class EditMapPanelGrouped extends DefaultEditMapPanel
 			//if (key.startsWith("user"))
 			//	continue;
 			partialPanels.get(key).setUpdateCollection(updateCollection);
+		}
+	}
+	
+	public void setPropertyHandlerType(EditMapPanelX.PropertyHandlerType t)
+	{
+		for (String key : keyclasses)
+		{
+			((EditMapPanelX)partialPanels.get(key)).setPropertyHandlerType(t);
 		}
 	}
 	

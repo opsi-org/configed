@@ -236,7 +236,7 @@ public class DocumentToPdf {
 		    	   fileName = temp.getAbsolutePath();
 		    	   //System.out.println("Temp file : " + temp.getAbsolutePath());
 		    	}catch(IOException e){
-		    	   e.printStackTrace();
+		    	   logging.logTrace(e);
 		    	}
 			}
 			try {

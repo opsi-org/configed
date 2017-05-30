@@ -12,6 +12,10 @@ import java.util.regex.*;
 
 public class HostInfo 
 {
+	private static int numberOfInstances = 0; //an AtomicInteger would be threadsafe
+	private final int instanceNumber;
+	public static HashMap<String, Integer> ID2InstanceNumber;
+	
 	protected String depotOfClient;
 	protected String clientDescription;;
 	protected String clientInventoryNumber;
@@ -170,18 +174,49 @@ public class HostInfo
 	
 	}
 		
+	public static void resetInstancesCount()
+	{
+		numberOfInstances = 0;
+		ID2InstanceNumber = new HashMap<String, Integer>();
+	}
 	
+	public static int getInstancesCount()
+	{
+		return numberOfInstances;
+	}
 	
+	public static int incAndGetInstancesCount()
+	{
+		numberOfInstances++;
+		return numberOfInstances;
+	}
+	
+	private void extendMapID2InstanceNumber(String key)
+	{
+		ID2InstanceNumber.put(key, instanceNumber);
+	}
+	
+	public Integer getInstanceNumber(String key)
+	{
+		return ID2InstanceNumber.get(key);
+	}
+		
 	public HostInfo()
 	{
 		initialize();
+		instanceNumber = incAndGetInstancesCount();
 	}
 
 	public HostInfo(Map<String, Object> pcInfo)
 	{
+		instanceNumber = incAndGetInstancesCount();
 		produceFrom(pcInfo);
 	}
 	
+	public boolean isInstanceNumber(int compareNumber)
+	{
+		return instanceNumber == compareNumber;
+	}
 	
 	public HashMap<String, Object> getDisplayRowMap0()
 	{
@@ -600,7 +635,7 @@ public class HostInfo
 		{
 			clientDescription = sourceOfChanges.get(clientDescriptionKEY);
 			int col = findCol(selectionPanel, configed.getResourceValue("ConfigedMain.pclistTableModel.clientDescription"));
-			selectionPanel.getTableModel().setValueAt(clientDescription, row, col);
+			if (col > -1) selectionPanel.getTableModel().setValueAt(clientDescription, row, col);
 
 			mainFrame.setClientDescriptionText( clientDescription ); //restoring old value
 
@@ -615,7 +650,7 @@ public class HostInfo
 			clientInventoryNumber = sourceOfChanges.get(clientInventoryNumberKEY);
 
 			int col = findCol(selectionPanel, configed.getResourceValue("ConfigedMain.pclistTableModel.clientInventoryNumber"));
-			selectionPanel.getTableModel().setValueAt( clientInventoryNumber, row, col);
+			if (col > -1) selectionPanel.getTableModel().setValueAt( clientInventoryNumber, row, col);
 
 			mainFrame.setClientInventoryNumberText( clientInventoryNumber ); //restoring old value
 
@@ -650,6 +685,11 @@ public class HostInfo
 		if (  (sourceOfChanges.get(clientMacAddressKEY) != null) && !(sourceOfChanges.get(clientMacAddressKEY).trim()).equals("") )
 		{
 			clientMacAddress = (sourceOfChanges.get(clientMacAddressKEY)).trim();
+			
+			int col = findCol(selectionPanel, configed.getResourceValue("ConfigedMain.pclistTableModel.clientHardwareAddress"));
+			if (col > -1) selectionPanel.getTableModel().setValueAt( clientMacAddress, row, col);
+
+			
 
 			mainFrame.setClientMacAddress(clientMacAddress);; //restoring old value
 

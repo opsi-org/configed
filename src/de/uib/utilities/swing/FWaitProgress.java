@@ -204,6 +204,7 @@ public class FWaitProgress extends JFrame
 
 	public void stop()
 	{
+		logging.info(this, "stop");
 		showing = false;
 		setVisible(false);
 	}

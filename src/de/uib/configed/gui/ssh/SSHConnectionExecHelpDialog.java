@@ -57,7 +57,7 @@ public class SSHConnectionExecHelpDialog extends SSHConnectionOutputDialog
 		}
 		catch (Exception e) 
 		{
-			e.printStackTrace();
+			logging.logTrace(e);
 		}
 	}
 	

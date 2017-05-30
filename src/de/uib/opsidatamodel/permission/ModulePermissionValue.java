@@ -32,7 +32,7 @@ public class ModulePermissionValue
 		MODULE_CHECKED.put("uefi", true);
 		MODULE_CHECKED.put("userroles", true);
 	}
-	
+	/*
 	public static final Map<String, Boolean> MODULE_PERMITTED;
 	static { 
 		MODULE_PERMITTED = new LinkedHashMap<String, Boolean>();
@@ -41,6 +41,7 @@ public class ModulePermissionValue
 			MODULE_PERMITTED.put(key, true);
 		}
 	}
+	*/
 	
 	
 		
@@ -102,7 +103,7 @@ public class ModulePermissionValue
 				}
 				catch(NumberFormatException ex)
 				{
-					logging.info(this, "not a number: " + ob);
+					logging.debug(this, "not a number: " + ob);
 				}
 				if (number != null)
 					result = new ExtendedInteger(number);
@@ -130,7 +131,7 @@ public class ModulePermissionValue
 			}
 			catch ( Exception ex )
 			{
-				logging.info(this,  "DateParseException for " + ob);
+				logging.debug(this,  "DateParseException for " + ob);
 			}
 			
 		}
@@ -156,14 +157,14 @@ public class ModulePermissionValue
 	public ModulePermissionValue(de.uib.opsicommand.Executioner exec, Object ob, ExtendedDate defaultExpires)
 	{
 		this.exec = exec;
-		logging.info(this, "value object given: " + ob);
+		logging.debug(this, "value object given: " + ob);
 		booleanValue = null;
 		expiresDate = ExtendedDate.ZERO;
 		maxClients = ExtendedInteger.ZERO;
 		if (ob != null) 
 		{
 			Map<String, Object> detailled = interpretAsJson(ob);
-			logging.info(this, "detailled "  + detailled);
+			logging.debug(this, "detailled "  + detailled);
 			if (detailled != null)
 			{
 				maxClients = retrieveMaxClients( detailled.get( keyMaxClients ) );

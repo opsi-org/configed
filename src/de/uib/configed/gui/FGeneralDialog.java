@@ -2,7 +2,7 @@ package de.uib.configed.gui;
 
 /**
  * FGeneralDialog
- * Copyright:     Copyright (c) 2001-2016
+ * Copyright:     Copyright (c) 2001-2017
  * Organisation:  uib
  * @author Rupert Röder
  */
@@ -139,12 +139,19 @@ public class FGeneralDialog extends JDialog
 		setFont(Globals.defaultFont);
 		setIconImage (Globals.mainIcon);
 		additionalPane  = pane;
+
+	}
+	
+	protected boolean wantToBeRegisteredWithRunningInstances()
+	{
+		return true;
 	}
 	
 	protected void registerWithRunningInstances()
 	{
 		logging.info(this, "registerWithRunningInstances");
 		//if ( !isModal() )
+		if (wantToBeRegisteredWithRunningInstances() )
 			FEditObject.runningInstances.add(this, "");
 	}
 		
@@ -199,6 +206,7 @@ public class FGeneralDialog extends JDialog
 	public FGeneralDialog(Frame owner, String title, boolean modal, Object[] buttonList, int lastButtonNo, int preferredWidth, int preferredHeight)
 	{
 		super(owner, modal);
+		//super();??
 		logging.info(this, "created by constructor 3");
 		registerWithRunningInstances();
 
@@ -234,6 +242,7 @@ public class FGeneralDialog extends JDialog
 	{
 		logging.info(this, "setButtons " +  java.util.Arrays.asList( buttonNames ) );
 		button1Text = (String) buttonNames[0];
+		jButton1.setText("hallo");
 
 		if (noOfButtons> 1)
 		{ 
@@ -278,6 +287,7 @@ public class FGeneralDialog extends JDialog
 		jButton3.setText(button3Text);
 		jPanelButtonGrid.setLayout(gridLayout1);
 		southPanel.setOpaque(false);
+		
 
 		jPanelButtonGrid.setOpaque(false);
 
@@ -431,36 +441,42 @@ public class FGeneralDialog extends JDialog
 
 	public void doAction1()
 	{
-		logging.debug(this, "doAction1");
+		logging.debug(this, "FGeneralDialog.doAction1");
 		result = 1;
 		leave();
 	}
 
 	public void doAction2()
 	{
+		logging.debug(this, "FGeneralDialog.doAction2");
 		result = 2;
 		leave();
 	}
 
 	public void doAction3()
 	{
+		logging.debug(this, "FGeneralDialog.doAction3");
 		result = 3;
 		leave();
 	}
 
 	public void leave ()
 	{
+		logging.debug(this, "FGeneralDialog.leave");
 		setVisible (false);
 
 		dispose ();
 		FEditObject.runningInstances.forget(this);
 	}
 
+	
 	public void setButtonsEnabled(boolean b)
 	{
 		jButton1.setEnabled(b);
 		jButton2.setEnabled(b);
+		jButton3.setEnabled(b);
 	}
+	
 
 	// Events
 	// window

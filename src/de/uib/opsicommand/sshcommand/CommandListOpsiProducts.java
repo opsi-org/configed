@@ -18,6 +18,7 @@ public class CommandListOpsiProducts /*extends*/implements SSHCommand
 	// private int helpColumns=0;
 	private String directory ;
 	private int priority = 0 ;
+	
 	public CommandListOpsiProducts()
 	{
 		// command = "find /home/opsiproducts -name '*.opsi' | sort";
@@ -26,15 +27,36 @@ public class CommandListOpsiProducts /*extends*/implements SSHCommand
 	{
 		logging.info(this, "CommandListOpsiProducts find in " + dir);
 		directory = dir;
-		// command = "find " + dir + " -name '*.opsi' | sort";
+		// command = "find " + dir + "E" -name '*.opsi' | sort";
 	}
 
+	
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+	
 	@Override
 	public String getId()
 	{
 		return "CommandListOpsiProducts";
 	}
-
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return null;
+	}
+	@Override
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
+	}
 	// @Override
 	// public String getBasicName()
 	// {

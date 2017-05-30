@@ -13,7 +13,9 @@ package de.uib.configed.gui;
  *
  */
 
+
 import de.uib.configed.*;
+import de.uib.opsidatamodel.PersistenceController;
 
 //import de.uib.opsidatamodel.PersistenceController;  // needed for update_version_display
 import java.awt.*;
@@ -52,8 +54,6 @@ import de.uib.utilities.selectionpanel.*;
 import de.uib.utilities.datapanel.*;
 import de.uib.utilities.logging.*;
 import de.uib.utilities.observer.RunningInstancesObserver;
-
-
 import de.uib.opsicommand.sshcommand.*;
 
 //import de.uib.utilities.StringvaluedObject;
@@ -1300,6 +1300,12 @@ public class MainFrame extends JFrame
 			jMenuSSHConnection.setForeground(Globals.actionRed);
 			jMenuSSHConnection.setText(connectiondata.trim() + " " + factory.not_connected);
 		}
+		else if (status.equals(factory.connected_not_allowed))
+		{
+			jMenuSSHConnection.setForeground(Globals.actionRed);
+			jMenuSSHConnection.setText(connectiondata.trim() + " " + factory.connected_not_allowed);
+
+		}
 		else if (status.equals(factory.connected))
 		{
 			jMenuSSHConnection.setForeground(Globals.okGreen); 
@@ -1312,28 +1318,30 @@ public class MainFrame extends JFrame
 		setupMenuServer();
 	}
 
-	private boolean getBoolConfigValue(String key, boolean defaultvalue, Map<String, Object> configs )
+	private boolean getBoolConfigValueForUser(final String key, final boolean defaultvalue, final Map<String, Object> configs )
 	{
-		ArrayList<Object> list = (ArrayList<Object>) configs.get(key);
+		String user_identifier = main.getPersistenceController().KEY_USER_ROOT + ".{" + main.USER + "}.";
+		String generic_user_identifier = main.getPersistenceController().KEY_USER_ROOT + ".{}.";
+		ArrayList<Object> list = (ArrayList<Object>) configs.get(user_identifier + key);
 		if (list ==null || list.size() == 0)
 		{
-			logging.info(this, "setupMenuServer getBoolConfigValue key " + key +" not existing. get default value " ); // + defaultvalue);
-			list = (ArrayList<Object>) configs.get(key.replace(main.USER, ""));
+			logging.info(this, "setupMenuServer getBoolConfigValueForUser key " + key +" not existing. get default value " ); // + defaultvalue);
+			list = (ArrayList<Object>) configs.get(generic_user_identifier + key);
 			if (list ==null || list.size() == 0)
 			{
-				logging.info(this, "setupMenuServer getBoolConfigValue key " + key +" not existing. set to default value " + defaultvalue);
+				logging.info(this, "setupMenuServer getBoolConfigValueForUser key " + key +" not existing. set to default value " + defaultvalue);
 				return defaultvalue;
 			}
 			else
 			{
-				logging.info(this, "setupMenuServer getBoolConfigValue key " + key +" active " + ((Boolean) list.get(0)));
+				logging.info(this, "setupMenuServer getBoolConfigValueForUser key " + key +" active " + ((Boolean) list.get(0)));
 				return (Boolean) list.get(0);
 			}
 			// return defaultvalue;
 		}
 		else
 		{
-			logging.info(this, "setupMenuServer getBoolConfigValue key " + key +" active " + ((Boolean) list.get(0)));
+			logging.info(this, "setupMenuServer getBoolConfigValueForUser key " + key +" active " + ((Boolean) list.get(0)));
 			return (Boolean) list.get(0);
 		}
 	}
@@ -1378,9 +1386,11 @@ public class MainFrame extends JFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				if (factory.getConnectionState().equals(factory.not_connected))
-					logging.error(this, "Please check connection. State now: " + factory.getConnectionState());
+					logging.error(this, configed.getResourceValue("SSHConnection.not_connected.message") + " " + factory.getConnectionState());
+				else if (factory.getConnectionState().equals(factory.connected_not_allowed))
+					logging.error(this, configed.getResourceValue("SSHConnection.connected_not_allowed.message"));
 				else if (factory.getConnectionState().equals(factory.unknown))
-					logging.error(this, "Please check connection. State now: " + factory.getConnectionState());
+					logging.error(this, configed.getResourceValue("SSHConnection.not_connected.message") + " " + factory.getConnectionState());
 				else
 					remoteSSHTerminalAction();
 			}
@@ -1413,13 +1423,12 @@ public class MainFrame extends JFrame
 		jMenuServer.addSeparator();
 		// jMenuServer.add(jMenuSSHConfig);
 		
-		String user_identifier = main.getPersistenceController().KEY_USER_ROOT + ".{" + main.USER + "}.";
-		Map<String, Object> configs = main.getPersistenceController().getConfig(main.getPersistenceController().getHostInfoCollections().getConfigServer());
-		boolean commandsAreDeactivated = (! getBoolConfigValue(user_identifier + main.getPersistenceController().KEY_SSH_COMMANDS_ACTIVE, 
-										main.getPersistenceController().KEY_SSH_CONFIG_ACTIVE_defaultvalue, configs));
+		Map<String, Object> serverConfigs = main.getPersistenceController().getConfig(main.getPersistenceController().getHostInfoCollections().getConfigServer());
+		boolean commandsAreDeactivated = (! getBoolConfigValueForUser(main.getPersistenceController().KEY_SSH_COMMANDS_ACTIVE, 
+										main.getPersistenceController().KEY_SSH_CONFIG_ACTIVE_defaultvalue, serverConfigs));
 		logging.info(this, "setupMenuServer commandsAreDeactivated " + commandsAreDeactivated);
 
-		if ( methodsExists)
+		if ( methodsExists )
 		{
 			factory.retrieveSSHCommandListRequestRefresh();
 			java.util.List<SSHCommand_Template> sshcommands =  factory.retrieveSSHCommandList();
@@ -1449,9 +1458,11 @@ public class MainFrame extends JFrame
 						public void actionPerformed(ActionEvent e)
 						{
 							if (factory.getConnectionState().equals(factory.not_connected))
-								logging.error(this, "Please check connection. State now: " + factory.getConnectionState());
+								logging.error(this, configed.getResourceValue("SSHConnection.not_connected.message") + " " + factory.getConnectionState());
+							else if (factory.getConnectionState().equals(factory.connected_not_allowed))
+								logging.error(this, configed.getResourceValue("SSHConnection.connected_not_allowed.message"));
 							else if (factory.getConnectionState().equals(factory.unknown))
-								logging.error(this, "Please check connection. State now: " + factory.getConnectionState());
+								logging.error(this, configed.getResourceValue("SSHConnection.not_connected.message") + " " + factory.getConnectionState());
 							else remoteSSHExecAction(com);
 						}
 					});
@@ -1494,9 +1505,12 @@ public class MainFrame extends JFrame
 				public void actionPerformed(ActionEvent e)
 				{
 					if (factory.getConnectionState().equals(factory.not_connected))
-						logging.error(this, "You are not connected!");
-					else
-						remoteSSHExecAction(command);
+						logging.error(this, configed.getResourceValue("SSHConnection.not_connected.message") + " " + factory.getConnectionState());
+					else if (factory.getConnectionState().equals(factory.connected_not_allowed))
+						logging.error(this, configed.getResourceValue("SSHConnection.connected_not_allowed.message"));
+					else if (factory.getConnectionState().equals(factory.unknown))
+						logging.error(this, configed.getResourceValue("SSHConnection.not_connected.message") + " " + factory.getConnectionState());
+					else remoteSSHExecAction(command);
 				}
 			});
 			if (! jMenuServer.isMenuComponent(menuOpsi))
@@ -1508,14 +1522,19 @@ public class MainFrame extends JFrame
 
 		
 		logging. info(this, "setupMenuServer create/read command menu configs");
-		jMenuRemoteTerminal.setEnabled(getBoolConfigValue(user_identifier + main.getPersistenceController().KEY_SSH_SHELL_ACTIVE, 
-									main.getPersistenceController().KEY_SSH_SHELL_ACTIVE_defaultvalue, configs));
-		jMenuSSHConfig.setEnabled(getBoolConfigValue(user_identifier + main.getPersistenceController().KEY_SSH_CONFIG_ACTIVE, 
-									main.getPersistenceController().KEY_SSH_CONFIG_ACTIVE_defaultvalue, configs));
-		jMenuSSHCommandControl.setEnabled(getBoolConfigValue(user_identifier + main.getPersistenceController().KEY_SSH_CONTROL_ACTIVE, 
-									main.getPersistenceController().KEY_SSH_CONTROL_ACTIVE_defaultvalue, configs));
-		jMenuServer.setEnabled(getBoolConfigValue(user_identifier + main.getPersistenceController().KEY_SSH_MENU_ACTIVE, 
-									main.getPersistenceController().KEY_SSH_MENU_ACTIVE_defaultvalue, configs));
+		jMenuRemoteTerminal.setEnabled(getBoolConfigValueForUser(PersistenceController.KEY_SSH_SHELL_ACTIVE, 
+									PersistenceController.KEY_SSH_SHELL_ACTIVE_defaultvalue, serverConfigs));
+		jMenuSSHConfig.setEnabled(getBoolConfigValueForUser(PersistenceController.KEY_SSH_CONFIG_ACTIVE, 
+									PersistenceController.KEY_SSH_CONFIG_ACTIVE_defaultvalue, serverConfigs));
+		jMenuSSHCommandControl.setEnabled(getBoolConfigValueForUser(PersistenceController.KEY_SSH_CONTROL_ACTIVE, 
+									PersistenceController.KEY_SSH_CONTROL_ACTIVE_defaultvalue, serverConfigs));
+		jMenuServer.setEnabled(
+			!isReadOnly
+			//&& getBoolConfigValueForUser(PersistenceController.PARTKEY_USER_PRIVILEGE_SERVER_READWRITE, 
+			//						true, serverConfigs)
+			&& getBoolConfigValueForUser(PersistenceController.KEY_SSH_MENU_ACTIVE, 
+									PersistenceController.KEY_SSH_MENU_ACTIVE_defaultvalue, serverConfigs)
+			);
 	}
 
 	private void setupMenuGrouping()
@@ -3816,13 +3835,14 @@ public class MainFrame extends JFrame
 			                   @Override
 			                   protected void reloadHostConfig()
 			                   {
-				                   super.reloadHostConfig();
-				                   main.cancelChanges();
-
-				                   main.getPersistenceController().configOptionsRequestRefresh();
-				                   //main.requestReloadConfigsForSelectedClients();
-				                   main.getPersistenceController().hostConfigsRequestRefresh();
-				                   main.resetView(ConfigedMain.viewNetworkconfiguration);
+			                   	    	logging.info(this, "reloadHostConfig");
+							super.reloadHostConfig();
+							main.cancelChanges();
+							
+							main.getPersistenceController().configOptionsRequestRefresh();
+							//main.requestReloadConfigsForSelectedClients();
+							main.getPersistenceController().hostConfigsRequestRefresh();
+							main.resetView(ConfigedMain.viewNetworkconfiguration);
 			                   }
 
 
@@ -4678,6 +4698,9 @@ public class MainFrame extends JFrame
 
 	protected void arrangeWs(Set<JDialog> frames)
 	{
+		//problem: https://bugs.openjdk.java.net/browse/JDK-7074504
+		//Can iconify, but not deiconify a modal JDialog
+
 
 		if (frames == null)
 			return;

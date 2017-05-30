@@ -19,6 +19,28 @@ public class CommandOpsiPackageManager implements SSHCommand
 	public CommandOpsiPackageManager()
 	{
 	}
+	
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+	
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return null;
+	}
+	@Override 
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
+	}
 	@Override
 	public String getId()
 	{

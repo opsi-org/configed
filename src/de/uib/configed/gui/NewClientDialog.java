@@ -640,6 +640,40 @@ public class NewClientDialog extends FGeneralDialog
 			if (fQuestion.getResult() == 1)
 				return;
 		}
+		
+		boolean onlyNumbers = true;
+		int i = 0;
+		while (onlyNumbers && i<hostname.length())
+		{
+			if (!Character.isDigit(hostname.charAt(i)))
+				onlyNumbers = false;
+			i++;
+		}
+			
+		if (onlyNumbers)
+		{
+			FTextArea fQuestion = new FTextArea(Globals.mainFrame,
+			                                    configed.getResourceValue("NewClientDialog.IgnoreOnlyDigitsRequirement.Question")
+			                                    + " (" + Globals.APPNAME + ") ",
+			                                    true,
+			                                    new String[]{
+			                                        configed.getResourceValue("FGeneralDialog.no"),
+			                                        configed.getResourceValue("FGeneralDialog.yes")
+			                                    },
+			                                    350, 100);
+			StringBuffer message = new StringBuffer("");
+			message.append( configed.getResourceValue("NewClientDialog.IgnoreOnlyDigitsRequirement.Message") );
+			//message.append(" \"");
+			//message.append(hostname);
+			//message.append("\" \n");
+			fQuestion.setMessage(message.toString());
+			fQuestion.centerOn(this);
+			fQuestion.setAlwaysOnTop(true);
+			fQuestion.setVisible(true);
+
+			if (fQuestion.getResult() == 1)
+				return;
+		}
 
 		if (main.getPersistenceController().isWithUEFI())
 		{

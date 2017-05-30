@@ -52,7 +52,8 @@ public class PanelHostProperties extends JPanel
 		combo.addItemListener(this);
 		de.uib.configed.gui.helper.PropertiesTableCellRenderer cellRenderer
 			= new de.uib.configed.gui.helper.PropertiesTableCellRenderer();
-		editMapPanel = new EditMapPanelX(cellRenderer, false, false);
+		logging.info(this, "buildPanel, produce editMapPanel");
+		editMapPanel = new EditMapPanelX(cellRenderer, false, false); //true, true); 
 		((EditMapPanelX) editMapPanel).setCellEditor(SensitiveCellEditorForDataPanel.getInstance(this.getClass().getName().toString()));
 		editMapPanel.setShowToolTip(false);
 		

@@ -24,10 +24,12 @@ public class DataStubNOM extends DataStub
 
 	OpsiserviceNOMPersistenceController controller;
 	
+	public static Integer classCounter = 0;
 	
 	public DataStubNOM(OpsiserviceNOMPersistenceController controller)
 	{
 		this.controller = controller;
+		classCounter++;
 	}
 	
 
@@ -89,8 +91,10 @@ public class DataStubNOM extends DataStub
 				attribs.add(key);
 			}
 			
+			/*
 			attribs.remove(OpsiPackage.SERVICEkeyPRODUCT_ID);
 			attribs.add("id");
+			*/
 
 			for (String scriptKey : ActionRequest.getScriptKeys())
 			{
@@ -130,8 +134,10 @@ public class DataStubNOM extends DataStub
 			for (Map<String, Object> m : retrievedList)
 			{
 				//logging.info(this, "retrieveProductInfos " + m);
-				String productId = "" + m.get("id");
-				String versionInfo = OpsiPackage.produceVersionInfo( "" + m.get("productVersion"),  "" + m.get("packageVersion"));
+				String productId = "" + m.get( OpsiPackage.SERVICEkeyPRODUCT_ID0 );
+				String versionInfo = OpsiPackage.produceVersionInfo( 
+					"" + m.get( OpsiPackage.SERVICEkeyPRODUCT_VERSION ),
+					"" + m.get( OpsiPackage.SERVICEkeyPACKAGE_VERSION ) );
 
 				OpsiProductInfo productInfo = new OpsiProductInfo(m);
 				Map<String, OpsiProductInfo> version2productInfos = product2versionInfo2infos.get(productId);
@@ -256,6 +262,7 @@ public class DataStubNOM extends DataStub
 
 	protected void retrieveProductsAllDepots()
 	{
+		
 		logging.debug(this, "retrieveProductsAllDepots ? " +
 		              "depot2LocalbootProducts " + depot2LocalbootProducts + "\n" +
 		              "depot2NetbootProducts " + depot2NetbootProducts
@@ -270,6 +277,11 @@ public class DataStubNOM extends DataStub
 		)
 		{
 			
+			logging.info(this, "retrieveProductsAllDepots, reload");
+			logging.info(this, "retrieveProductsAllDepots, reload depot2NetbootProducts == null " + (depot2NetbootProducts == null));
+			logging.info(this, "retrieveProductsAllDepots, reload depot2LocalbootProducts == null " + (depot2LocalbootProducts == null));
+			logging.info(this, "retrieveProductsAllDepots, reload productRows == null " + (productRows == null));
+			logging.info(this, "retrieveProductsAllDepots, reload depot2Packages == null " + (depot2Packages == null));
 			controller.notifyDataLoadingObservers(configed.getResourceValue("LoadingObserver.loadtable") + " productOnDepot");
 			String[] callAttributes = new String[]{};
 			HashMap callFilter = new HashMap();
@@ -468,8 +480,8 @@ public class DataStubNOM extends DataStub
 				//logging.debug(this, "############ product " + productId + "  property " + propertyId  + "  , retrieved map " + retrievedMap);
 				//logging.debug(this, "############ product " + productId + "  property " + propertyId  + "  , property map " + productPropertyMap);
 
-				String productVersion = (String) retrievedMap.get("productVersion");
-				String packageVersion = (String) retrievedMap.get("packageVersion");
+				String productVersion = (String) retrievedMap.get( OpsiPackage.SERVICEkeyPRODUCT_VERSION );
+				String packageVersion = (String) retrievedMap.get( OpsiPackage.SERVICEkeyPACKAGE_VERSION );
 				String versionInfo = productVersion + de.uib.configed.Globals.ProductPackageVersionSeparator.forKey() + packageVersion;
 
 
@@ -560,10 +572,10 @@ public class DataStubNOM extends DataStub
 
 			for (Map<String, Object> dependencyItem : retrievedList)
 			{
-				String productId = "" + dependencyItem.get("productId");
+				String productId = "" + dependencyItem.get( OpsiPackage.DBkeyPRODUCT_ID );
 
-				String productVersion = "" + dependencyItem.get("productVersion");
-				String packageVersion = "" + dependencyItem.get("packageVersion");
+				String productVersion = "" + dependencyItem.get( OpsiPackage.SERVICEkeyPRODUCT_VERSION );
+				String packageVersion = "" + dependencyItem.get( OpsiPackage.SERVICEkeyPACKAGE_VERSION );
 				String versionInfo = productVersion + de.uib.configed.Globals.ProductPackageVersionSeparator.forKey() + packageVersion;
 
 				String action = "" + dependencyItem.get("productAction");
@@ -743,7 +755,7 @@ public class DataStubNOM extends DataStub
 		{
 			hosts.addAll(newClients);
 			
-			logging.info(this, "produceProductPropertyStates, all hosts " + hosts);
+			//logging.info(this, "produceProductPropertyStates, all hosts " + hosts);
 			
 			controller.notifyDataLoadingObservers(configed.getResourceValue("LoadingObserver.loadtable") + " product property state");
 			String[] callAttributes = new String[]{};//"objectId","productId","propertyId", "values"};
@@ -760,7 +772,7 @@ public class DataStubNOM extends DataStub
 		
 		
 		
-		logging.info(this, "produceProductPropertyStates for hosts " + hosts + " : ");
+		logging.info(this, "produceProductPropertyStates for hosts " + hosts);
 		/*
 		for (Map<String, Object> m : result)
 		{
@@ -801,6 +813,9 @@ public class DataStubNOM extends DataStub
 		retrieveInstalledSoftwareInformation();
 		if (softwareList == null || softwareList.size() <  i + 1 || i == -1)
 		{
+			if (softwareList != null)
+				logging.info(this, "getSWident " + " until now softwareList.size() " + softwareList.size());
+			
 			boolean infoFound = false;
 			
 			//try reloading?
@@ -1239,7 +1254,8 @@ public class DataStubNOM extends DataStub
 		if (hostConfigs != null)
 			return;
 		
-		logging.info(this, "retrieveHostConfigs");
+		logging.info(this, "retrieveHostConfigs classCounter:" + classCounter);
+		
 		
 		controller.notifyDataLoadingObservers(configed.getResourceValue("LoadingObserver.loadtable") + " config state");
 			

@@ -35,6 +35,9 @@ SOFTWARE_CONFIG    in opsi data base
 	
 	final protected Map<String, String> data;
 	protected java.util.List<String> software;
+	private static java.util.List<String> notFoundSoftwareIDs;
+	private static Long lastUpdateTime;
+	private static final long msAfterThisAllowNextUpdate = 60000;
 	protected Integer swId;
 	protected String swIdent;
 	protected String lastModificationS;
@@ -128,6 +131,7 @@ SOFTWARE_CONFIG    in opsi data base
 	public SWAuditClientEntry(final java.util.List<String> keys, final java.util.List<String> values,  
 		de.uib.opsidatamodel.PersistenceController controller)
 	{
+		//logging.debug(this, "create, keys/values constructor");
 		data = new HashMap<String, String>();
 		/*
 		for (int i = 0; i < keys.size(); i++)
@@ -149,6 +153,7 @@ SOFTWARE_CONFIG    in opsi data base
 	
 	public SWAuditClientEntry(final Map<String, Object> m, de.uib.opsidatamodel.PersistenceController controller)
 	{
+		//logging.info(this, "create, map constructor");
 		data = new HashMap<String, String>();
 		data.put(SWAuditEntry.id, Globals.produceNonNull( m.get(CLIENT_ID) ) );
 		swIdent = produceSWident(m);
@@ -169,7 +174,8 @@ SOFTWARE_CONFIG    in opsi data base
 		String result = "";
 		try{
 			result = de.uib.utilities.Globals.pseudokey(new String[]{
-					values.get( keys.indexOf( DB_COLUMNS.get(SWAuditEntry.NAME) ) ),
+					//(values.get( keys.indexOf( DB_COLUMNS.get(SWAuditEntry.NAME) ) )).toLowerCase(),
+					values.get( keys.indexOf( DB_COLUMNS.get(SWAuditEntry.NAME) ) ), 
 					values.get( keys.indexOf( DB_COLUMNS.get(SWAuditEntry.VERSION) ) ),
 					values.get( keys.indexOf( DB_COLUMNS.get(SWAuditEntry.SUBVERSION) ) ),
 					values.get( keys.indexOf( DB_COLUMNS.get(SWAuditEntry.LANGUAGE) ) ),
@@ -204,28 +210,97 @@ SOFTWARE_CONFIG    in opsi data base
 			
 		}
 		
+		//return result.toLowerCase();
 		return result;
 	}
 	
 	
 	protected void updateSoftware()
 	{
-		controller.installedSoftwareInformationRequestRefresh();
-		software = controller.getSoftwareList();
+		logging.info(this, "updateSoftware");
+		if (lastUpdateTime != null && (System.currentTimeMillis() - lastUpdateTime >   msAfterThisAllowNextUpdate) )
+		{
+			controller.installedSoftwareInformationRequestRefresh();
+			software = controller.getSoftwareList();
+			lastUpdateTime = System.currentTimeMillis();
+			notFoundSoftwareIDs = new ArrayList<String>();
+		}
+		else
+			logging.warning(this, "updateSoftware: doing nothing since we just updated");
 	}
 	
 	
+	private Integer getIndex(java.util.List<String> list, String element)
+	{
+		/*
+		int result = -1;
+		if (list == null || element == null)
+			return result;
+		
+		int i = 0;
+		while (result == -1 && i < list.size())
+		{
+			if (list.get(i).equalsIgnoreCase( element ) )
+			{
+				result = i;
+				logging.info(this, "indexOfIgnoreCase found equality of " + element + " to entry \n" + i + " : " + list.get(i));
+			}
+			i++;
+		}
+		
+		return result;
+		*/
+		
+		
+		int j = software.indexOf( swIdent );
+		//logging.info(this, "pure indexOf produces \n" + j);
+		
+		int result = j;
+		
+		if (result == -1)
+		{
+			logging.warning(this, "try indexOfIgnoreCase for " + swIdent); 
+			int i = 0;
+			while (result == -1 && i < list.size())
+			{
+				if (list.get(i).equalsIgnoreCase( element ) )
+				{
+					result = i;
+					logging.warning(this, "indexOfIgnoreCase found equality of " + element + " to entry \n" + i + " : " + list.get(i));
+				}
+				i++;
+			}
+			if (result == -1) logging.info(this, "tried indexOfIgnoreCase in vain"); 
+		}
+		
+		return result;
+		
+	}
+	
+			
+	
 	protected Integer produceSWid()
 	{
-		swId = software.indexOf(swIdent);
+		logging.debug(this, "search index for software with ident " + swIdent + " \nswId " + swId);
+		swId = getIndex(software, swIdent);
+		
 		if (swId == -1)
 		{
 			logging.info(this, "software with ident " + swIdent + " not yet indexed");
-			updateSoftware();
-			swId = software.indexOf(swIdent);
+			if (notFoundSoftwareIDs != null && !notFoundSoftwareIDs.contains(swIdent))
+			{
+				updateSoftware();
+				swId = getIndex(software, swIdent);
+			}
 			
+			//logging.info(this, "software with ident " + swIdent + " has index " + swId);
 			if (swId == -1)
-				logging.warning(this, "swIdent not found in softwarelist");
+			{
+				logging.warning(this, "swIdent not found in softwarelist: " + swIdent);
+				if (notFoundSoftwareIDs == null)
+					notFoundSoftwareIDs = new ArrayList<String>();
+				notFoundSoftwareIDs.add(swIdent);
+			}
 		}
 			
 		return swId;
@@ -234,13 +309,17 @@ SOFTWARE_CONFIG    in opsi data base
 	
 	public static String produceSWident(Map<String, Object>readMap)
 	{
-		return de.uib.utilities.Globals.pseudokey(new String[]{
+		String result = de.uib.utilities.Globals.pseudokey(new String[]{
+					//((String) readMap.get(SWAuditEntry.key2serverKey.get(SWAuditEntry.NAME))).toLowerCase(),
 					(String) readMap.get(SWAuditEntry.key2serverKey.get(SWAuditEntry.NAME)),
 					(String) readMap.get(SWAuditEntry.key2serverKey.get(SWAuditEntry.VERSION)),
 					(String) readMap.get(SWAuditEntry.key2serverKey.get(SWAuditEntry.SUBVERSION)),
 					(String) readMap.get(SWAuditEntry.key2serverKey.get(SWAuditEntry.LANGUAGE)),
 					(String) readMap.get(SWAuditEntry.key2serverKey.get(SWAuditEntry.ARCHITECTURE))
 									  });
+		
+		//return result.toLowerCase();
+		return result;
 	}
 	
 	

@@ -51,6 +51,27 @@ public class CommandOpsimakeproductfile implements SSHCommand,SSHCommandNeedPara
 	public CommandOpsimakeproductfile()
 	{
 	}
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return null;
+	}
+	@Override
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
+	}
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+
 
 	
 	public void setDir(String d)
@@ -149,7 +170,14 @@ public class CommandOpsimakeproductfile implements SSHCommand,SSHCommandNeedPara
 	public SSHConnectionExecDialog startHelpDialog()
 	{
 		SSHCommand command = new CommandHelp(this);
-		SSHConnectExec exec = new SSHConnectExec(command, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
+		SSHConnectExec exec = 
+			new SSHConnectExec(
+				command
+				 // SSHConnectionExecDialog.getInstance(
+					// configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" ",
+					// command
+					// )
+				);
 		return (SSHConnectionExecDialog) exec.getDialog();
 	}
 

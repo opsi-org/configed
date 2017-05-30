@@ -2,7 +2,7 @@ package de.uib.configed.gui;
 
 /**
  * DepotList
- * Copyright:     Copyright (c) 2012-2016
+ * Copyright:     Copyright (c) 2012-2017
  * Organisation:  uib
  * @author Rupert Röder
  */
@@ -18,7 +18,7 @@ import de.uib.opsidatamodel.*;
 
 import de.uib.utilities.logging.*;
 
-public class DepotsList extends JList
+public class DepotsList extends JList<String>
 	implements ComponentListener
 {
 	
@@ -45,10 +45,15 @@ public class DepotsList extends JList
 	}
 	
 	@Override
-	public void setListData(Vector v)
+	public void setListData(Vector<? extends String> v)
 	{
 		super.setListData(v);
 		saveV = v;
+	}
+	
+	public Vector<? extends String> getListData()
+	{
+		return saveV;
 	}
 	
 	//interface ComponentListene

@@ -412,8 +412,11 @@ public class SSHCommandParameterMethods extends SSHCommandParameterMethodsAbstra
 				((Component) field).requestFocusInWindow();
 			}
 		};
-		final JDialog jdialog = opPane.createDialog(dialog, configed.getResourceValue("SSHConnection.ParameterDialog.Input"));
+		final JDialog jdialog = opPane.createDialog(dialog, 
+			de.uib.configed.Globals.APPNAME + " " + configed.getResourceValue("SSHConnection.ParameterDialog.Input"));
+		jdialog.setSize(400, 150);
 		jdialog.setVisible(true);
+		
 		if ( ((Integer)opPane.getValue()) == JOptionPane.OK_OPTION)
 			return field.getText().trim();
 		return null;

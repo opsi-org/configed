@@ -15,7 +15,7 @@ import de.uib.utilities.logging.logging;
 
 /**
  *  This class contains global constants and functions for the library
- *  Copyright:     Copyright (c) uib 2001-2016
+ *  Copyright:     Copyright (c) uib 2001-2017
  */
 
 public class Globals 
@@ -47,7 +47,7 @@ public class Globals
 	public static final Color backgroundWhite = new Color (245, 245, 245);
 	public static final Color backgroundGrey = new Color (220,220,220);
 	public static final Color backgroundLightGrey = new Color (230,230,230);
-	public static final Color backLightBlue = new Color (220,226,242); //new Color (210,216,232); 
+	public static final Color backLightBlue = new Color  (220,228,242);  //new Color (210,216,232); 
 	//public static final Color backLight = new Color (220,230,255); 
 	public static final Color backBlue = new Color (200,200,250); 
 	public static final Color backNimbus = new Color (214,219,222);
@@ -412,6 +412,30 @@ public class Globals
 		return m;
 	}
 	
+	public static boolean checkCollection( Object source, String location, String cName, Collection c )
+	{
+		boolean result = (c != null);
+		if (result)
+		{
+			if (c instanceof Collection)
+			{
+				logging.info(source.getClass().getName() + " " + cName + " has size  " + ((Collection)c).size() );
+			}
+			else if (c instanceof Map)
+			{
+				logging.info(source.getClass().getName() + " " + cName + " has size  " + ((Map)c).size() );
+			} 
+			else	
+			{
+				logging.info(source.getClass().getName() + " " + cName + " is neither a Collection nor a Map  ");
+				result = false;
+			}
+		}
+		else 
+			logging.info(source.getClass().getName() + " " + cName + " is null");
+		
+		return result;
+	}
 	
 	public static String makeHTMLlines(String s)
 	{

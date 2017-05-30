@@ -225,7 +225,7 @@ public class ConfigedMain
 	LinkedList<String> depotNamesLinked ;
 	int[] depotsList_selectedIndices_lastFetched;
 	boolean depotsList_selectionChanged;
-	String depotRepresentative;
+	private String depotRepresentative;
 	ListSelectionListener depotsListSelectionListener;
 
 
@@ -416,7 +416,8 @@ public class ConfigedMain
 		anyDataChanged = false;
 
 		waitCursorInitGui = new WaitCursor( mainFrame.retrieveBasePane(), mainFrame.getCursor(), "initGui");
-
+		
+		
 
 		preloadData();
 
@@ -427,6 +428,8 @@ public class ConfigedMain
 			                           public void run()
 			                           {
 				                           initialTreeActivation();
+				                           if (configed.fProgress != null)
+				                           	   configed.fProgress.actAfterWaiting();
 			                           }
 		                           }
 		                          );;
@@ -583,6 +586,24 @@ public class ConfigedMain
 		return result;
 	}
 
+	private void setSSHallowedHosts()
+	{
+		Set<String> sshAllowedHosts = new HashSet<String>();
+		
+		if (persist.isDepotsFullPermission())
+		{
+			logging.info(this, "set ssh allowed hosts " + HOST);
+			sshAllowedHosts.add( HOST );
+			sshAllowedHosts.addAll( persist.getHostInfoCollections().getDepots().keySet() );
+		}
+		else
+		{
+			sshAllowedHosts.addAll( persist.getDepotPropertiesForPermittedDepots().keySet() );
+		}
+		
+		SSHCommandFactory.getInstance(this).setAllowedHosts( sshAllowedHosts );
+	}
+		
 
 	public void loadDataAndGo()
 	{
@@ -592,6 +613,7 @@ public class ConfigedMain
 		//errors are already handled in login
 		logging.info(this, " we got persist " + persist);
 
+		setSSHallowedHosts();
 		
 		logging.info(this, "call initData");
 		initData();
@@ -644,6 +666,8 @@ public class ConfigedMain
 		}
 		
 		configed.fProgress.startWaiting();
+		
+		
 		
 		new Thread(){
 			public void run()
@@ -856,7 +880,7 @@ public class ConfigedMain
 		//persist.getAllLocalbootProductNames();
 		//persist.getAllNetbootProductNames();
 
-		possibleActions = persist.getPossibleActions(myServer);
+		possibleActions = persist.getPossibleActions(depotRepresentative);
 		persist.retrieveProductPropertyDefinitions();
 		persist.retrieveProductDependencies();
 		persist.retrieveDepotProductProperties();
@@ -2531,12 +2555,7 @@ public class ConfigedMain
 	}
 
 
-	/*
-	public void requestReloadConfigsForSelectedClients()
-{
-		persist.hostConfigsRequestRefresh(getSelectedClients());
-}
-	*/
+
 
 
 	public void requestReloadStatesAndActions()
@@ -4118,18 +4137,10 @@ public class ConfigedMain
 				//waitCursor = new WaitCursor( mainFrame.retrieveBasePane(), mainFrame.getCursor() );
 
 
-				Map<String, java.util.List<Object>> defaultValuesMap = persist.getConfigDefaultValues();
+				//Map<String, java.util.List<Object>> defaultValuesMap = persist.getConfigDefaultValues();
 
-				//persist.getHostInfoCollections().depotsRequestRefresh();
-				Map<String, Map<String, Object>> depotProperties = persist.getHostInfoCollections().getAllDepots();
-				Map<String, Map<String, Object>> depotPropertiesForPermittedDepots = new HashMap<String, Map<String, Object>>();
-				
-				for (String depot :depotProperties.keySet())
-				{
-					if (persist.getDepotPermission(depot))
-						depotPropertiesForPermittedDepots.put(depot,  depotProperties.get(depot));
-				}
-				
+			
+				LinkedHashMap<String, Map<String, Object>> depotPropertiesForPermittedDepots = persist.getDepotPropertiesForPermittedDepots();
 
 				//waitCursor.stop();
 
@@ -4298,7 +4309,8 @@ public class ConfigedMain
 				    additionalConfigs,
 				    additionalconfigurationUpdateCollection,
 				    false, //editableOptions
-				    persist.PROPERTYCLASSES_CLIENT
+				    persist.PROPERTYCLASSES_CLIENT,
+				    de.uib.utilities.datapanel.EditMapPanelX.PropertyHandlerType.RESETTING_VALUE_TO_DEFAULT
 				    );
 
 				//waitCursor.stop();
@@ -4994,7 +5006,24 @@ public class ConfigedMain
 	{
 		return selectedDepots;
 	}
-
+	
+	public Vector<String> getSelectedDepotsV()
+	{
+		return selectedDepotsV;
+	}
+	
+	public java.util.List<String> getAccessedDepots()
+	{
+		ArrayList<String> accessedDepots =new ArrayList<String>();
+		for (String depot : selectedDepotsV)
+		{
+			if (persist.getDepotPermission( depot ))
+				accessedDepots.add( depot );
+		}
+		
+		return accessedDepots;
+	}
+		
 
 	public java.util.List<String> getProductNames()
 	{
@@ -5239,13 +5268,15 @@ public class ConfigedMain
 	private void reloadData()
 	{
 		checkSaveAll(true);
-		logging.info(this, " reloadData _______________________________ ");
+		int saveViewIndex = getViewIndex();
+		
+		logging.info(this, " reloadData _______________________________  saveViewIndex " + saveViewIndex);
 
 		//logging.debug(this, "init waitCursor, mainFrame " + mainFrame);
 		WaitCursor.stopAll(); //stop all old waiting threads if there should be any left
 		//WaitCursor waitCursor = new WaitCursor(mainFrame.retrieveBasePane(), mainFrame.getCursor() );
 
-		int saveViewIndex = getViewIndex();
+		
 
 		ArrayList<String> selValuesList = selectionPanel.getSelectedValues();
 		
@@ -5272,14 +5303,24 @@ public class ConfigedMain
 			//persist.mapOfMethodSignaturesRequestRefresh(); we dont need update this
 			persist.opsiInformationRequestRefresh();
 			persist.hwAuditConfRequestRefresh();
+			logging.info(this, "call installedSoftwareInformationRequestRefresh()");
 			persist.installedSoftwareInformationRequestRefresh();
 			persist.softwareAuditOnClientsRequestRefresh();
 
 			persist.productDataRequestRefresh();
-
+			
+			//logging.info(this, "reloadData saveViewIndex == viewProductProperties? " + (saveViewIndex == viewProductProperties) );
+			//if (saveViewIndex == viewProductProperties)
+			
+			logging.info(this, "reloadData _1");
 			//mainFrame.panel_ProductProperties.paneProducts.requestReload();
+				//calls again persist.productDataRequestRefresh()
+			mainFrame.panel_ProductProperties.paneProducts.reload();
+			logging.info(this, "reloadData _2");
+			
 			//if variable modelDataValid in GenTableModel has no function , the following statement is sufficient:
-			globalProductsTableProvider.requestReloadRows();
+			//globalProductsTableProvider.requestReloadRows();
+			//mainFrame.panel_ProductProperties.paneProducts.reset();
 
 
 			//only for licenses, will be handled in another method
@@ -5287,18 +5328,24 @@ public class ConfigedMain
 			//persist.reconciliationInfoRequestRefresh();
 
 			requestRefreshDataForClientSelection();
-			persist.getHostInfoCollections().opsiHostsRequestRefresh();
-			//persist.getHostInfoCollections().pclistRequestRefresh();
-			persist.hostGroupsRequestRefresh();
-			//persist.clientsWithFailedRequestRefresh();
-			//persist.getHostInfoCollections().depotsRequestRefresh();
-
+			
+			reloadHosts();
+			//includes:
+			
+			//_/
+			//persist.getHostInfoCollections().opsiHostsRequestRefresh();
+			//_/
+			//persist.hostGroupsRequestRefresh();
+			//_/
+			//persist.hostConfigsRequestRefresh();
+			//_/
+			///persist.hostGroupsRequestRefresh();
+			//_/
+			//persist.fObject2GroupsRequestRefresh();
+			//_/
+			//persist.fGroup2MembersRequestRefresh();
+			
 			persist.configOptionsRequestRefresh();
-			persist.hostConfigsRequestRefresh();
-			//hostConfigs = null; //selected values for this
-			persist.hostGroupsRequestRefresh();
-			persist.fObject2GroupsRequestRefresh();
-			persist.fGroup2MembersRequestRefresh();
 			persist.fProductGroup2MembersRequestRefresh();
 			persist.auditHardwareOnHostRequestRefresh();
 			
@@ -7027,6 +7074,7 @@ public class ConfigedMain
 	{
 		mainFrame.reloadServerMenu();
 	}
+	
 	/**
 	* Starts the execution of command
 	* @param command
@@ -7053,6 +7101,7 @@ public class ConfigedMain
 			}.start();
 		// }
 	}
+	
 	/**
 	* Starts the config dialog
 	*/
@@ -7061,22 +7110,26 @@ public class ConfigedMain
 		// if (configed.sshkey != null)
 		// 	SSHConfigDialog sshConfig = SSHConfigDialog.getInstance(mainFrame, this, sshkey, readLocallySavedServerNames());
 		// else
-		SSHConfigDialog sshConfig = SSHConfigDialog.getInstance(mainFrame, this, readLocallySavedServerNames());
-		// sshConfig.setLocalServerNames(readLocallySavedServerNames());
+		//SSHConfigDialog sshConfig = SSHConfigDialog.getInstance(mainFrame, this, readLocallySavedServerNames());
+		SSHConfigDialog sshConfig = SSHConfigDialog.getInstance(mainFrame, this);
 	}
+	
 	public SSHConfigDialog getSSHConfigDialog()
 	{
 		return SSHConfigDialog.getInstance(mainFrame, this);
 	}
+	
 	/** Starts the control dialog */
 	public void startSSHControlDialog()
 	{
 		SSHCommandControlDialog sshControl = SSHCommandControlDialog.getInstance(this);
 	}
+	
 	/** Starts the terminal */
 	public void startSSHOpsiServerTerminal()
 	{
 		final ConfigedMain m = this;
+		
 		new Thread(new Runnable() 
 		{
 			@Override
@@ -7178,6 +7231,13 @@ public class ConfigedMain
 		for (int i = 0; i < getSelectedClients().length; i++) {
 			persist.deleteClient(getSelectedClients()[i]);
 		}
+		
+		if (getFilterClientList())
+		{
+			mainFrame.toggleClientFilterAction();
+			//setFilterClientList(false);
+		}
+			
 
 		refreshClientListKeepingGroup();
 		//refreshClientList(true);
@@ -7394,7 +7454,13 @@ public class ConfigedMain
 
 		logging.debug(this, "selectClientsNotCurrentProductInstalled product " + productId + ", " + productVersion + ", " + packageVersion);
 
-		java.util.List clientsToSelect = persist.getClientsWithOtherProductVersion(productId,productVersion, packageVersion);
+		java.util.List<String> clientsToSelect = persist.getClientsWithOtherProductVersion(productId,productVersion, packageVersion);
+		
+		logging.info(this, "selectClientsNotCurrentProductInstalled clients found globally " + clientsToSelect.size());
+		
+		clientsToSelect.retainAll( producePcListForDepots( getSelectedDepots() ).keySet() );
+			
+		logging.info(this, "selectClientsNotCurrentProductInstalled clients found for selected depots " + clientsToSelect.size());
 
 		//persist.retrieveProductproperties(clientsToSelect);
 

@@ -81,28 +81,33 @@ public class SSHConnectionOutputDialog extends FGeneralDialog///*javax.swing.JDi
 		put( "[0;47;40m", de.uib.configed.Globals.lightBlack);
 		put( "[1;47;40m", de.uib.configed.Globals.lightBlack);
 	}};
-	protected ActionListener closeListener;
+	
+	protected class DialogCloseListener implements ActionListener{
+			public void actionPerformed(ActionEvent e)
+			{
+				logging.debug(this, "actionPerformed " + e);
+				cancel();
+				//JOptionPane.showMessageDialog(de.uib.configed.Globals.mainFrame, "we got cancel");
+			}
+		}
+	;
+	
+	DialogCloseListener closeListener;
 
 
 	// protected JDialog parentDialog;
-	
+	// private static SSHConnectionOutputDialog instance;
 	public SSHConnectionOutputDialog(String title)
 	{
 		super(null,title, false);
 		buildFrame = false;
+		closeListener =new DialogCloseListener();
 		initOutputGui();
 		this.setSize(700, 400);
 		this.centerOn(de.uib.configed.Globals.mainFrame);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		closeListener = new ActionListener() {
-				public void actionPerformed(ActionEvent e)
-				{
-					cancel();
-				}
-			};
-		btn_close.addActionListener(closeListener);
 	}
-
+	
 	public void setStartAnsi(Color c)
 	{
 		linecolor = c;
@@ -110,7 +115,7 @@ public class SSHConnectionOutputDialog extends FGeneralDialog///*javax.swing.JDi
 
 	public void append(String line, Component focusedComponent)
 	{
-		append(line);
+		append("", line);
 	}
 
 	private String findAnsiCodeColor(Map.Entry entry, String key, String line )
@@ -130,6 +135,10 @@ public class SSHConnectionOutputDialog extends FGeneralDialog///*javax.swing.JDi
 	}
 
 	public void append(String line)
+	{
+		append("", line);
+	}
+	public void append(String caller, String line)
 	{
 		// if ((line == null) || (line.trim().length() <=0)) return;
 		// Color linecolor = Color.BLACK;
@@ -155,7 +164,7 @@ public class SSHConnectionOutputDialog extends FGeneralDialog///*javax.swing.JDi
 		try 
 		{
 			StyledDocument doc = output.getStyledDocument();
-			doc.insertString(doc.getLength(), line, aset);
+			doc.insertString(doc.getLength(), caller + line, aset);
 		}
 		catch (Exception e)
 		{
@@ -219,7 +228,7 @@ public class SSHConnectionOutputDialog extends FGeneralDialog///*javax.swing.JDi
 			// btn_test_command.setSize(new Dimension( Globals.graphicButtonWidth + 15 ,Globals.lineHeight));
 			btn_close.setPreferredSize(btn_dim);
 		
-			btn_close.addActionListener(closeListener);
+			btn_close.addActionListener(closeListener); 
 			
 			// lbl_userhost = new JLabel();
 			// lbl_userhost.setText("user@host");
@@ -233,19 +242,31 @@ public class SSHConnectionOutputDialog extends FGeneralDialog///*javax.swing.JDi
 		}
 	}
 	public boolean showResult = true;
-	public void setVisibility(boolean v)
+	
+	public void setStatusFinish(String s)
 	{
-		this.setVisible(v);
+		if (showResult) setVisible(true);
+		else cancel();
 	}
 	public void setStatusFinish()
 	{
-		if (showResult) setVisibility(true);
+		
+		if (showResult) setVisible(true);
 		else cancel();
+		
+	}
+	
+	@Override
+	public void  setVisible(boolean b)
+	{
+		logging.debug(this, "setVisible " + b);
+		super.setVisible(b);
 	}
 	
 	public void cancel() 
 	{
 		buildFrame = false;
+		logging.debug(this, "cancel");
 		super.doAction2();
 	}
 

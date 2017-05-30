@@ -19,7 +19,7 @@ public class OpsiDataStringEqualsOperation extends StringEqualsOperation impleme
     public OpsiDataStringEqualsOperation( String map, String key, String data, SelectElement element )
     {
         super(element);
-    		logging.debug(this, "OpsiDataStringEqualsOperation maptype, key, data: " + map + ", " + key + ", " + data );
+    	 logging.debug(this, "OpsiDataStringEqualsOperation maptype, key, data: " + map + ", " + key + ", " + data );
         this.map = map;
         this.key = key;
         this.data = data.toLowerCase();
@@ -36,10 +36,10 @@ public class OpsiDataStringEqualsOperation extends StringEqualsOperation impleme
     public boolean doesMatch( Client client )
     {
         OpsiDataClient oClient = (OpsiDataClient) client;
-        //logging.debug(this, "doesMatch client " + oClient);
+        logging.debug(this, " (OpsiDataStringEqualsOperation) doesMatch client " + oClient);
         //logging.debug(this, "doesMatch interesting map, key  "   + map + ", " + key);
         Map realMap = oClient.getMap( map );
-        //logging.debug( this, "doesMatch " + realMap.toString() );
+        logging.debug( this, "doesMatch,  we look into map for key " + key);
         if( !realMap.containsKey(key) || realMap.get(key) == null )
         {
             //logging.debug(this, "key '" + key + "' not found!");
@@ -47,7 +47,7 @@ public class OpsiDataStringEqualsOperation extends StringEqualsOperation impleme
         }
         
         String realData = realMap.get(key).toString().toLowerCase();
-        //logging.debug( this, "doesMatch realData " + realData);
+        logging.debug( this, " (OpsiDataStringEqualsOperation) doesMatch realData " + realData);
         return checkData( realData );
     }
     
@@ -59,14 +59,14 @@ public class OpsiDataStringEqualsOperation extends StringEqualsOperation impleme
     		
     	String rData = realData.toLowerCase();
     	
-        if( dataSplitted == null )
+        if( dataSplitted == null ) //simple case: no '*'
         {
-            //logging.debug(this, "checkData, comparing to data " + data);
-            if( rData.equals(data) )
-                return true;
-            return false;
+        	//if (data.equals("cached"))
+        	//	logging.info(this, "checkData, comparing to rData " + rData);
+            return rData.equals(data); 
         }
-        else if( dataSplitted.length == 0 )
+        
+        else if( dataSplitted.length == 0 ) //the only chars are  '*'
         {
             //logging.debug(this, "checkData,  dataSplitted.length == 0" );
             if( realData.length() > 0 )
@@ -76,6 +76,8 @@ public class OpsiDataStringEqualsOperation extends StringEqualsOperation impleme
         }
         else
         {
+        		//logging.debug(this, "checkData comparing to dataSplitted " + Arrays.toString(dataSplitted));
+        		
             if( !startsWith )
                 if( !rData.startsWith(dataSplitted[0]) )
                     return false;

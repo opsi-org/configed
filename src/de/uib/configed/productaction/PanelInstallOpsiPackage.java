@@ -59,7 +59,7 @@ public class PanelInstallOpsiPackage extends JPanel
 	final String packageShareS = "opsi_workbench"; 
 	String opsiWorkBenchDirectoryS;
 	File opsiWorkBenchDirectory;
-	final String packageServerDirectoryS = "/home/opsiproducts";
+	final String packageServerDirectoryS = "/home/opsiproducts/";
 	String opsiPackageServerPathS;
 	
 	boolean smbMounted;
@@ -188,7 +188,7 @@ public class PanelInstallOpsiPackage extends JPanel
 	{
 		logging.debug(this, "produceServerPath ");
 		
-		opsiPackageServerPathS = packageServerDirectoryS + "/" + opsiPackageNameS;
+		opsiPackageServerPathS = packageServerDirectoryS + opsiPackageNameS;
 		logging.debug(this, "produceServerPath " + opsiPackageServerPathS);
 	}
 	

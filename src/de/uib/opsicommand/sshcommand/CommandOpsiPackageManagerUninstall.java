@@ -2,6 +2,7 @@ package de.uib.opsicommand.sshcommand;
 import de.uib.configed.*;
 import de.uib.configed.gui.*;
 import de.uib.configed.gui.ssh.*;
+import de.uib.utilities.logging.*;
 
 public class CommandOpsiPackageManagerUninstall extends CommandOpsiPackageManager implements SSHCommandNeedParameter
 {
@@ -10,10 +11,10 @@ public class CommandOpsiPackageManagerUninstall extends CommandOpsiPackageManage
 	private boolean install;
 	private int priority = 10;
 	// private boolean isMultiCommand = false;
-	String opsiproduct = "";
-	String depot = "";
-	String verbosity = "";
-	String keepFiles = "";
+	String opsiproduct;
+	String depots;
+	String verbosity;;
+	String keepFiles;;
 	String freeInput = "";
 	public CommandOpsiPackageManagerUninstall()
 	{
@@ -66,7 +67,16 @@ public class CommandOpsiPackageManagerUninstall extends CommandOpsiPackageManage
 	public SSHConnectionExecDialog startHelpDialog()
 	{
 		SSHCommand command = new CommandHelp(this);
-		SSHConnectExec exec = new SSHConnectExec(command, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
+		SSHConnectExec exec = new 
+			SSHConnectExec(
+				command
+				// SSHConnectionExecDialog.getInstance(
+					// configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" ",
+					// command
+					// )
+				)
+			;
+			
 		// SSHConnectExec exec = new SSHConnectExec();
 		// exec.exec(command, true, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
 		return (SSHConnectionExecDialog) exec.getDialog();
@@ -80,7 +90,7 @@ public class CommandOpsiPackageManagerUninstall extends CommandOpsiPackageManage
 	@Override
 	public String getCommand()
 	{
-		command = "opsi-package-manager -q " + verbosity + depot + freeInput + opsiproduct;
+		command = "opsi-package-manager -q " + verbosity + depots + freeInput + opsiproduct;
 		if (needSudo()) return SSHCommandFactory.getInstance().sudo_text+" "+ command + " 2>&1";
 		return command + " 2>&1";
 	}
@@ -98,13 +108,17 @@ public class CommandOpsiPackageManagerUninstall extends CommandOpsiPackageManage
 
 	public void setOpsiproduct(String prod)
 	{
-		if (prod != "") opsiproduct = " -r " + prod;
-		else opsiproduct = "";
+		if (prod!= null && !prod.equals("")) 
+			opsiproduct = " -r " + prod;
+		else 
+			opsiproduct = "";
 	}
-	public void setDepot(String dep)
+	public void setDepot(String depotlist)
 	{
-		if (dep != "") depot = " -d " + dep;
-		else depot = "";
+		if (depotlist != null && !depotlist.equals("")) 
+			depots = " -d " + depotlist;
+		else 
+			depots = "";
 	}
 	public void setVerbosity(int v_sum)
 	{
@@ -120,7 +134,11 @@ public class CommandOpsiPackageManagerUninstall extends CommandOpsiPackageManage
 	}
 	public boolean checkCommand()
 	{
-		if (opsiproduct == "") return false;
+		if (opsiproduct == null || opsiproduct.trim().equals(""))
+		{
+			logging.info(this, "no product given");
+			return false;
+		}
 		return true;
 	}
 

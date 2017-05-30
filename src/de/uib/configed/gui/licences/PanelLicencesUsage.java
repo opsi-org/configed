@@ -34,7 +34,7 @@ public class PanelLicencesUsage extends MultiTablePanel
 	private de.uib.utilities.swing.DynamicCombo comboClient;
 
 	protected int minVSize = 50;
-	protected int tablesMaxWidth = 600;
+	protected int tablesMaxWidth = 1000;
 	protected int buttonHeight = 15;
 	protected int buttonWidth = 140;
 	protected int lPoolHeight = 100;

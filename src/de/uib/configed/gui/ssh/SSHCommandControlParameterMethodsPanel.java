@@ -80,19 +80,25 @@ public class SSHCommandControlParameterMethodsPanel  extends JPanel
 		logging.debug(this, "init setting up components ");
 		Dimension tf_dim = new Dimension( Globals.firstLabelWidth -Globals.graphicButtonWidth, Globals.buttonHeight);
 		Dimension tf_dim_long = new Dimension( Globals.firstLabelWidth + Globals.gapSize, Globals.buttonHeight);
-		Dimension btn_dim = new Dimension(Globals.graphicButtonWidth + 15 ,Globals.buttonHeight + 3);
+		Dimension btn_dim = new Dimension(Globals.graphicButtonWidth + 15 ,Globals.buttonHeight);
 		
 		lbl_empty.setPreferredSize(tf_dim_long);
 		lbl_paramMethods.setText(configed.getResourceValue("SSHConnection.CommandControl.parameterMethods"));
-		lbl_paramMethods.setPreferredSize(tf_dim);
+		//lbl_paramMethods.setPreferredSize(tf_dim);
 		lbl_paramFormats.setText(configed.getResourceValue("SSHConnection.CommandControl.parameterFormats"));
-		lbl_paramFormats.setPreferredSize(tf_dim);
+		//lbl_paramFormats.setPreferredSize(tf_dim);
 		cb_parameter_formats = new JComboBox(factory.getParameterHandler().getParameterFormats());
+		logging.info(this, "cb_parameter_formats lightweight " + cb_parameter_formats.isLightWeightPopupEnabled() );
+		//cb_parameter_formats.setLightWeightPopupEnabled(false);
 		cb_parameter_formats.setPreferredSize(tf_dim_long);
+		cb_parameter_formats.setMaximumRowCount(5); // we have to delimit it so that is constrained to the component (in Windows) //Globals.comboBoxRowCount);
 		cb_parameter_methods = new JComboBox(factory.getParameterHandler().getParameterMethodLocalNames());
 		cb_parameter_methods.setSelectedItem(configed.getResourceValue("SSHConnection.CommandControl.cbElementInteractiv"));
 		cb_parameter_methods.setPreferredSize(tf_dim_long);
+		cb_parameter_methods.setMaximumRowCount(5); //Globals.comboBoxRowCount);
+		//cb_parameter_methods.setLightWeightPopupEnabled(false);
 		cb_parameter_formats.setEnabled(false);
+		
 		cb_parameter_methods.addItemListener(new ItemListener() 
 		{
 			@Override
@@ -106,6 +112,7 @@ public class SSHCommandControlParameterMethodsPanel  extends JPanel
 				else { cb_parameter_formats.setEnabled(true); }
 			}
 		});
+		
 
 		btn_test_param= new de.uib.configed.gui.IconButton(
 			de.uib.configed.configed.getResourceValue("SSHConnection.CommandControl.btnTestParamMethod") ,
@@ -156,52 +163,51 @@ public class SSHCommandControlParameterMethodsPanel  extends JPanel
 		thisLayout.setHorizontalGroup(thisLayout.createSequentialGroup()
 			.addGap(lGap)
 			.addGroup(thisLayout.createParallelGroup()
-				.addGap(Globals.minGapSize)
 				.addGroup(thisLayout.createSequentialGroup()
 					.addGroup(thisLayout.createParallelGroup()
 						.addComponent(lbl_paramMethods, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
 						.addComponent(lbl_paramFormats, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
 					)
-					.addGap(Globals.minGapSize)
+					.addGap(Globals.minGapSize*2)
 					.addGroup(thisLayout.createParallelGroup()
-						.addComponent(cb_parameter_methods,GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
-						.addComponent(cb_parameter_formats, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
+						.addComponent(cb_parameter_methods,Globals.buttonWidth, Globals.buttonWidth, 3*Globals.buttonWidth)
+						.addComponent(cb_parameter_formats, Globals.buttonWidth, Globals.buttonWidth, 3*Globals.buttonWidth)
 					)
+					.addGap(Globals.minGapSize*3, Globals.minGapSize*3, Short.MAX_VALUE)
 				)
+				
 				.addGroup(thisLayout.createSequentialGroup()
-					.addComponent(lbl_empty, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
-					.addComponent(btn_test_param, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-					.addComponent(btn_add_param, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addComponent(lbl_empty, 10, 10, Short.MAX_VALUE)
+					.addComponent(btn_test_param, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth)
+					.addComponent(btn_add_param, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth)
 				)
+				
 			)
 			.addGap(rGap)
 		);
 		thisLayout.setVerticalGroup(thisLayout.createSequentialGroup()
-			.addGap(oGap)
-			.addGroup(thisLayout.createParallelGroup()
+			.addGap(oGap * 2)
+			.addGroup(thisLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
 				.addComponent(cb_parameter_methods, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-				.addGap(Globals.minGapSize)
 				.addGroup(thisLayout.createSequentialGroup()
 					.addComponent(lbl_paramMethods, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
 				)
 			)
 			.addGap(Globals.minGapSize)
-			.addGroup(thisLayout.createParallelGroup()
+			.addGroup(thisLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
 				.addComponent(cb_parameter_formats, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-				.addGap(Globals.minGapSize)
 				.addGroup(thisLayout.createSequentialGroup()
 					.addComponent(lbl_paramFormats,GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
 				)
 			)
 			.addGap(Globals.minGapSize)
-			.addGroup(thisLayout.createParallelGroup()
-				.addComponent(btn_add_param, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-				.addGap(Globals.minGapSize)
-				.addComponent(btn_test_param, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-				.addGap(Globals.minGapSize)
-				.addComponent(lbl_empty, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+			.addGroup(thisLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+				.addComponent(btn_add_param, de.uib.configed.Globals.buttonHeight, de.uib.configed.Globals.buttonHeight, de.uib.configed.Globals.buttonHeight)
+				.addComponent(btn_test_param, de.uib.configed.Globals.buttonHeight, de.uib.configed.Globals.buttonHeight, de.uib.configed.Globals.buttonHeight)
+				.addComponent(lbl_empty, de.uib.configed.Globals.buttonHeight, de.uib.configed.Globals.buttonHeight, de.uib.configed.Globals.buttonHeight)
 			)
-			.addGap(uGap)
+			.addGap(uGap * 2)
+			//.addGap(50) //we add space for the combo box popup which does not always correctly appear if not placed inside the frame 
 		);
 		repaint();
 		revalidate();

@@ -240,7 +240,7 @@ public class JSONthroughHTTPS extends JSONthroughHTTP
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			logging.logTrace(e);
 		}
 		
 		return sslFactory;

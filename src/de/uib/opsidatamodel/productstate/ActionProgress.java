@@ -22,6 +22,7 @@ public class ActionProgress
 	//valid service states
 	public final static int NONE = 0;
 	public final static int INSTALLING = 1;
+	public final static int CACHED = 2;
 	
 	 
 	
@@ -51,6 +52,7 @@ public class ActionProgress
 		states.add(NOT_AVAILABLE);
 		states.add(NONE);
 		states.add(INSTALLING);
+		states.add(CACHED);
 		
 		labels = new Vector<String>();
 		labels.add(Globals.CONFLICTSTATEstring);
@@ -58,6 +60,7 @@ public class ActionProgress
 		labels.add("not_available");
 		labels.add("none");
 		labels.add("installing");
+		labels.add("cached");
 		
 		
 		
@@ -67,6 +70,7 @@ public class ActionProgress
 		state2label.put(NOT_AVAILABLE, "not_available");
 		state2label.put(NONE, "none");
 		state2label.put(INSTALLING, "installing");
+		state2label.put(CACHED, "cached");
 		
 		label2state = new HashMap<String, Integer>();
 		label2state.put(Globals.CONFLICTSTATEstring, CONFLICT);
@@ -74,6 +78,7 @@ public class ActionProgress
 		label2state.put("not_available", NOT_AVAILABLE);
 		label2state.put("none", NONE);
 		label2state.put("installing", INSTALLING);
+		label2state.put("cached", CACHED);
 		
 		label2displayLabel = new HashMap<String, String>();
 		label2displayLabel.put(Globals.CONFLICTSTATEstring, Globals.CONFLICTSTATEstring);
@@ -82,6 +87,7 @@ public class ActionProgress
 		label2displayLabel.put("none", "no process reported");
 		//abel2displayLabel.put("none", "none");
 		label2displayLabel.put("installing", "installing");
+		label2displayLabel.put("cached", "cached");
 		
 		displayLabel2label = new HashMap<String, String>();
 		displayLabel2label.put(Globals.CONFLICTSTATEstring, Globals.CONFLICTSTATEstring);
@@ -90,6 +96,7 @@ public class ActionProgress
 		displayLabel2label.put("no process reported", "none");
 		//displayLabel2label.put("none", "none");
 		displayLabel2label.put("installing", "installing");
+		displayLabel2label.put("cached", "cached");
 			
 		choiceLabels = new String[]{
 			label2displayLabel.get("none")

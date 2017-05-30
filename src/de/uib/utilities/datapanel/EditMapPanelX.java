@@ -1,6 +1,6 @@
 /* 
  *
- * (c) uib, www.uib.de, 2009-2016
+ * (c) uib, www.uib.de, 2009-2017
  *
  * author Rupert Röder
  */
@@ -39,16 +39,81 @@ public class EditMapPanelX extends DefaultEditMapPanel
 	
 	ListModelProducer modelProducer;
 	
-	
+	MouseListener popupListener;
 	MouseListener popupEditOptionsListener;
 	MouseListener popupNoEditOptionsListener;
 	
-	JMenuItem popupItemDeleteEntry;
+	//LinkedList<JMenuItem> listEditableModeMenuItems;
+	//LinkedList<JMenuItem> listNotEditableModeMenuItems;
+	
+	JMenuItem popupItemDeleteEntry0;
+	JMenuItem popupItemDeleteEntry1;
 	JMenuItem popupItemAddStringListEntry;
 	JMenuItem popupItemAddBooleanListEntry;
 	
 	ToolTipManager ttm;
 	
+	public enum PropertyHandlerType {STANDARD, RESETTING_VALUE_TO_DEFAULT};
+	
+	protected abstract class PropertyHandler
+	{
+		MapTableModel mapTableModel;
+		
+		public void setMapTableModel( MapTableModel  mapTableModel)
+		{
+			this.mapTableModel = mapTableModel;
+		}
+		
+		abstract public void remove( String key );
+		
+		abstract public String getRemovalMenuText();
+		
+	}
+	
+	protected class DefaultPropertyHandler extends PropertyHandler
+	{
+		@Override
+		public void remove( String key )
+		{
+			mapTableModel.removeEntry (key);
+		}
+		
+		@Override 
+		public String getRemovalMenuText()
+		{
+			return configed.getResourceValue("EditMapPanel.PopupMenu.RemoveEntry");
+		}
+		
+	}
+	
+	
+	protected class ResettingValuesPropertyHandler extends PropertyHandler
+	{
+		@Override
+		public void remove( String key )
+		{
+			//signal removal of entry to persistence modul
+			mapTableModel.removeEntry(key);
+				
+			//set for this session to default, without storing the value separately)
+			mapTableModel.addEntry(
+					key, 
+					defaultsMap.get(key),
+					//optionsMap.get(key).getDefaultValues(), 
+					false
+					);
+		}
+		
+		@Override 
+		public String getRemovalMenuText()
+		{
+			return configed.getResourceValue("EditMapPanelX.PopupMenu.ResetEntryToDefault");
+		}
+	}
+	
+	protected PropertyHandler propertyHandler;
+	private final PropertyHandler defaultPropertyHandler;
+	private final PropertyHandler resettingValuesPropertyHandler;
 	
 	protected boolean markDeviation = true;
 	
@@ -67,23 +132,24 @@ public class EditMapPanelX extends DefaultEditMapPanel
 		this (tableCellRenderer, keylistExtendible, true);
 	}
 	
-	public EditMapPanelX( TableCellRenderer tableCellRenderer, boolean keylistExtendible, boolean keylistEditable)
+	public EditMapPanelX( TableCellRenderer tableCellRenderer, boolean keylistExtendible, boolean entryRemovable)
 	{
-		this (tableCellRenderer, keylistExtendible, keylistEditable, false);
+		this (tableCellRenderer, keylistExtendible, entryRemovable, false);
 	}
 		
 	public EditMapPanelX( TableCellRenderer tableCellRenderer, 
 		boolean keylistExtendible, 
-		boolean keylistEditable,
+		boolean entryRemovable,
 		boolean reloadable)
 	{
-		super(tableCellRenderer, keylistExtendible, keylistEditable, reloadable);
-		//logging.info(this, "EditMapPanelX " +  keylistExtendible + ",  " +  keylistEditable + ",  " + reloadable);
+		super(tableCellRenderer, keylistExtendible, entryRemovable, reloadable);
+		logging.info(this, "EditMapPanelX +++ " +  keylistExtendible + ",  " +  entryRemovable + ",  " + reloadable);
 		ttm = ToolTipManager.sharedInstance();
 		ttm.setEnabled(true);
 		ttm.setInitialDelay(de.uib.utilities.Globals.toolTipInitialDelayMs);
 		ttm.setDismissDelay(de.uib.utilities.Globals.toolTipDismissDelayMs);
 		ttm.setReshowDelay(de.uib.utilities.Globals.toolTipReshowDelayMs);
+		
 		
 		
 		buildPanel();
@@ -105,10 +171,22 @@ public class EditMapPanelX extends DefaultEditMapPanel
 		
 		//editorfield.addFocusListener(this);
 		
+		
 		popupEditOptions = definePopup();
 		popupNoEditOptions = definePopup();
 		popup = popupEditOptions; 
+		
+		//logPopupElements(popup);
+		
+		//listNotEditableModeMenuItems = new LinkedList<JMenuItem>();
+		//listNotEditableModeMenuItems.add( (JMenuItem) popupNoEditOptions.getSubElements()[0] );
+		//listEditableModeMenuItems = new LinkedList<JMenuItem>( );
 
+		/*
+		popupListener = new utils.PopupMouseListener(popup);
+		table.addMouseListener(popupListener);
+		jScrollPane.getViewport().addMouseListener(popupListener);
+		
 		
 		popupEditOptionsListener = new utils.PopupMouseListener(popupEditOptions);
 		table.addMouseListener(popupEditOptionsListener);
@@ -117,68 +195,88 @@ public class EditMapPanelX extends DefaultEditMapPanel
 		popupNoEditOptionsListener = new utils.PopupMouseListener(popupNoEditOptions);
 		table.addMouseListener(popupNoEditOptionsListener);
 		jScrollPane.getViewport().addMouseListener(popupNoEditOptionsListener);
-		
+		*/
 		//((PopupMenuTrait)popup).addPopupListenersTo(new JComponent[]{table});
 		
-		logging.info(this, "keylistExtendible || keylistEditable " +  keylistExtendible + ", " + keylistEditable);
-			 
-		if (keylistExtendible || keylistEditable)
+		/* test
+		entryRemovable = true;
+		keylistExtendible = false;
+		*/
+		
+		resettingValuesPropertyHandler = new ResettingValuesPropertyHandler();
+		defaultPropertyHandler = new DefaultPropertyHandler();
+		propertyHandler = defaultPropertyHandler;
+		propertyHandler.setMapTableModel( mapTableModel );
+		
+		if (keylistExtendible || entryRemovable)
 		{
 			popupEditOptions.addSeparator();
 			
+			
 			table.getTableHeader().setToolTipText(configed.getResourceValue("EditMapPanel.PopupMenu.EditableToolTip"));
-			//popup = new JPopupMenu();
 			
-			//MouseListener popupListener = new utils.PopupMouseListener(popup);
-			//table.addMouseListener(popupListener);
-			 
-			popupItemAddStringListEntry = new JMenuItem(configed.getResourceValue("EditMapPanel.PopupMenu.AddEntrySingleSelection"));
-			popupEditOptions.add(popupItemAddStringListEntry);
-			popupItemAddStringListEntry.addActionListener(
-				new ActionListener()
-				{
-					public void actionPerformed(ActionEvent e){
-						
-						addEntryFor("java.lang.String", false);
-					}
-						
-				}
-			);
-			
-			popupItemAddStringListEntry = new JMenuItem(configed.getResourceValue("EditMapPanel.PopupMenu.AddEntryMultiSelection"));
-			popupEditOptions.add(popupItemAddStringListEntry);
-			popupItemAddStringListEntry.addActionListener(
-				new ActionListener()
-				{
-					public void actionPerformed(ActionEvent e){
-						
-						addEntryFor("java.lang.String", true);
-					}
-						
-				}
-			);
-			
-			popupItemAddBooleanListEntry = new JMenuItem(configed.getResourceValue("EditMapPanel.PopupMenu.AddBooleanEntry"));
-			popupEditOptions.add(popupItemAddBooleanListEntry);
-			popupItemAddBooleanListEntry.addActionListener(
-				new ActionListener()
-				{
-					public void actionPerformed(ActionEvent e){
-						
-						addEntryFor("java.lang.Boolean");
-					}
-						
-				}
-				
-			);
-			if (keylistEditable) //saving not implemented in persistencecontroller since new key is globally 
+			if (keylistExtendible)
 			{
-				popupItemDeleteEntry = new JMenuItem(configed.getResourceValue("EditMapPanel.PopupMenu.RemoveEntry"));
-				popupEditOptions.add(popupItemDeleteEntry);
-				popupItemDeleteEntry.addActionListener(
+				//popup = new JPopupMenu();
+				
+				//MouseListener popupListener = new utils.PopupMouseListener(popup);
+				//table.addMouseListener(popupListener);
+				 
+				popupItemAddStringListEntry = new JMenuItemFormatted(configed.getResourceValue("EditMapPanel.PopupMenu.AddEntrySingleSelection"));
+				popupEditOptions.add(popupItemAddStringListEntry);
+				popupItemAddStringListEntry.addActionListener(
 					new ActionListener()
 					{
 						public void actionPerformed(ActionEvent e){
+							
+							addEntryFor("java.lang.String", false);
+						}
+							
+					}
+				);
+				
+				//listEditableModeMenuItems.add( popupItemAddStringListEntry );
+				
+				popupItemAddStringListEntry = new JMenuItemFormatted(configed.getResourceValue("EditMapPanel.PopupMenu.AddEntryMultiSelection"));
+				popupEditOptions.add(popupItemAddStringListEntry);
+				popupItemAddStringListEntry.addActionListener(
+					new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e){
+							
+							addEntryFor("java.lang.String", true);
+						}
+							
+					}
+				);
+				
+				//listEditableModeMenuItems.add( popupItemAddStringListEntry );
+				
+				
+				popupItemAddBooleanListEntry = new JMenuItemFormatted(configed.getResourceValue("EditMapPanel.PopupMenu.AddBooleanEntry"));
+				popupEditOptions.add(popupItemAddBooleanListEntry);
+				popupItemAddBooleanListEntry.addActionListener(
+					new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e){
+							
+							addEntryFor("java.lang.Boolean");
+						}
+							
+					}
+					
+				);
+				
+				//listEditableModeMenuItems.add( popupItemAddBooleanListEntry );
+			}
+			
+			if (entryRemovable) 
+			{
+				
+				ActionListener listenerForRemoval = new ActionListener()
+					{
+						public void actionPerformed(ActionEvent e){
+							logging.info(this, "popupItemDeleteEntry action");
 							if (table.getSelectedRowCount() == 0)
 							{
 								//JOptionPane.showInternalMessageDialog(	table, 
@@ -202,16 +300,58 @@ public class EditMapPanelX extends DefaultEditMapPanel
 								}
 							}
 						}
-					}
-				);
+					};
+					
+				popupItemDeleteEntry0 = new JMenuItemFormatted(defaultPropertyHandler.getRemovalMenuText());
+					//configed.getResourceValue("EditMapPanel.PopupMenu.RemoveEntry"));
+				popupItemDeleteEntry0.addActionListener( listenerForRemoval );
+				
+				popupEditOptions.add(popupItemDeleteEntry0);
+				//the menu item seems to be work only for one menu
+				
+				
+				popupItemDeleteEntry1 = new JMenuItemFormatted(resettingValuesPropertyHandler.getRemovalMenuText());
+				popupItemDeleteEntry1.addActionListener(  listenerForRemoval );
+					
+				popupNoEditOptions.add(popupItemDeleteEntry1);
+				//logPopupElements( popupNoEditOptions );
+				
 			}
 		}
 	
 	}
 	
+	public void setPropertyHandlerType( PropertyHandlerType propertyHandlerType )
+	{
+		if (propertyHandlerType == null)
+			propertyHandler = defaultPropertyHandler;
+		
+		else
+		{
+			
+			switch ( propertyHandlerType )
+			{
+				case STANDARD: 
+					propertyHandler = defaultPropertyHandler;
+					break;
+				case RESETTING_VALUE_TO_DEFAULT:
+					propertyHandler = resettingValuesPropertyHandler;
+					break;
+				default:
+					logging.warning(this, "illegal propertyHandler type ");
+			}
+		}
+			
+		propertyHandler.setMapTableModel( mapTableModel );
+		popupItemDeleteEntry0.setText( propertyHandler.getRemovalMenuText() );
+		popupItemDeleteEntry1.setText( propertyHandler.getRemovalMenuText() );
+	}
 	
 	protected JPopupMenu definePopup()
 	{
+		
+		logging.info(this, "(EditMapPanelX) definePopup");
+		
 		JPopupMenu result = new JPopupMenu();
 		
 		if (reloadable)
@@ -611,20 +751,54 @@ public class EditMapPanelX extends DefaultEditMapPanel
 	{
 		mapTableModel.addEntry (key, newval);
 		names = mapTableModel.getKeys();
-		mapTableModel.fireTableDataChanged();
+		//mapTableModel.fireTableDataChanged(); //called in MapTableModel
 	}
 	
 	/** deleting an entry 
 	@param String key  - the key to delete
-	@param Object value  - if null then an empty String is the value
 	*/
-	final public void removeProperty(String key)
+	public void removeProperty(String key)
 	{
-		mapTableModel.removeEntry (key);
+		propertyHandler.remove(key);
+		
+		logging.info(this, "removeProperty for key " + key + " options " + optionsMap.get(key)); 
+		logging.info(this, "removeProperty for key " + key + " default value  " + defaultsMap.get(key) +  " - should be identical with - "   
+			+ optionsMap.get(key).getDefaultValues());
+		
+		/*
+		
+		if (mapTableModel.getUpdateCollection() instanceof de.uib.opsidatamodel.datachanges.AdditionalconfigurationUpdateCollection )
+		{
+			boolean isMasterConfig =  ((de.uib.opsidatamodel.datachanges.AdditionalconfigurationUpdateCollection) mapTableModel.getUpdateCollection()).isMasterConfig();
+			logging.info(this, "removeProperty for key " + key + " masterConfig " + isMasterConfig);
+			
+			if (isMasterConfig)
+				mapTableModel.removeEntry (key);
+			else
+			{
+				
+				//signal removal of entry to persistence modul
+				mapTableModel.removeEntry(key);
+				
+				//set for this session to default, without storing the value separately)
+				mapTableModel.addEntry(
+					key, 
+					defaultsMap.get(key),
+					//optionsMap.get(key).getDefaultValues(), 
+					false
+					);
+			}
+				
+			
+		}
+		else 
+			mapTableModel.removeEntry (key);
+		*/
+		
 		names = mapTableModel.getKeys();
-		mapTableModel.fireTableDataChanged();
+		logging.info(this, "removeProperty names left: " + names); 
+		//mapTableModel.fireTableDataChanged(); //called in MapTableModel
 	}
-	
 	
 	private Map testData()
 	{
@@ -668,24 +842,52 @@ public class EditMapPanelX extends DefaultEditMapPanel
 			table.scrollRectToVisible(table.getCellRect(row, 0, false));
 	}		
 	
-	
-	
 		
 	@Override
 	public void setOptionsEditable( boolean b )
 	{
+		logging.info(this, "setOptionsEditable " + b );
+		/*
 		if (b)
 		{
-			table.removeMouseListener(popupNoEditOptionsListener);
-			table.addMouseListener(popupEditOptionsListener);
-			jScrollPane.getViewport().addMouseListener(popupEditOptionsListener);
+			setPopupConfiguration( popupEditOptions );
 		}
 		else
 		{
+			setPopupConfiguration( popupNoEditOptions );
+		}
+		
+		/*
+		  ^^ test 
+		*/
+		if (b)
+		{
+			//setPopupConfiguration( listEditableModeMenuItems );
+			popup = popupEditOptions;
+			//logPopupElements(popup);
+			/*
+			table.removeMouseListener(popupNoEditOptionsListener);
+			table.addMouseListener(popupEditOptionsListener);
+			jScrollPane.getViewport().addMouseListener(popupEditOptionsListener);
+			*/
+			
+		}
+		else
+		{
+			//setPopupConfiguration( listNotEditableModeMenuItems );
+			popup = popupNoEditOptions;
+			//logPopupElements(popup);
+			/*
 			table.removeMouseListener(popupEditOptionsListener);
 			table.addMouseListener(popupNoEditOptionsListener);
 			jScrollPane.getViewport().addMouseListener(popupNoEditOptionsListener);
+			*/
+			
 		}
+		
+		popupListener = new utils.PopupMouseListener(popup);
+		table.addMouseListener(popupListener);
+		jScrollPane.getViewport().addMouseListener(popupListener);
 	}
 			
 }

@@ -20,7 +20,7 @@ public class PanelLicencesReconciliation extends MultiTablePanel
 	public PanelGenEditTable panelReconciliation;
 	
 	protected int minVSize = 50;
-	protected int tablesMaxWidth = 600;
+	protected int tablesMaxWidth = 1000;
 	protected int buttonHeight = 15;
 	protected int buttonWidth = 140;
 	
@@ -37,7 +37,7 @@ public class PanelLicencesReconciliation extends MultiTablePanel
     private void initComponents() {
 
         panelReconciliation = new PanelGenEditTable(configed.getResourceValue("ConfigedMain.Licences.SectiontitleReconciliation"), 
-			800, false, 0, true);
+			tablesMaxWidth, false, 0, true);
 		panelReconciliation.setListSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout((JPanel) this);

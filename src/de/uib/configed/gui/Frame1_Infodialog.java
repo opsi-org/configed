@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import de.uib.utilities.*;
 import de.uib.utilities.swing.*;
+import de.uib.utilities.logging.*;
 
 public class Frame1_Infodialog extends JDialog implements ActionListener, KeyListener
 {
@@ -32,7 +33,7 @@ public class Frame1_Infodialog extends JDialog implements ActionListener, KeyLis
   }
   catch(Exception e)
   {
-   e.printStackTrace();
+   logging.logTrace(e);
   }
   pack();
  }

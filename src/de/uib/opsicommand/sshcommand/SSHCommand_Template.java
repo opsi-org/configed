@@ -49,7 +49,7 @@ public class SSHCommand_Template implements SSHCommand,
 	private int position;
 	/** instance of SSHCommandFactory */
 	private SSHCommandFactory factory = SSHCommandFactory.getInstance();
-	
+	private String confidential_information = null;
 	/**
 	* Creates an empty SSHCommand_Template instance
 	* @return SSHCommand_Template instance
@@ -83,8 +83,32 @@ public class SSHCommand_Template implements SSHCommand,
 		logging.debug(this, "SSHCommand_Template this " + this.toString());
 		logging.debug(this, "SSHCommand_Template commandlist" + this.commandlistToString());
 	}
+	public SSHCommand_Template(SSHCommand orig, LinkedList<String> commandlist)
+	{
+		this(orig.getId(), commandlist, orig.getMenuText(), orig.needSudo(), orig.getParentMenuText(), 
+			orig.getToolTipText(), orig.getPriority());
+		logging.debug(this, "SSHCommand_Template this " + this.toString());
+		logging.debug(this, "SSHCommand_Template commandlist" + this.commandlistToString());
+	}
 
 
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+
+	private String mainName = "";
+	@Override
+	public String getMainName()
+	{return mainName;}
+	public void setMainName(String n)
+	{ mainName = n;}
+	
+	
 	/** 
 	* Sets the Id
 	* @param i (id): String
@@ -126,6 +150,18 @@ public class SSHCommand_Template implements SSHCommand,
 	{ 
 		ssh_command.add(sshc);
 		ssh_command_original.add(sshc);
+	}
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return confidential_information; // usually null;
+	}
+	@Override 
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
 	}
 
 	/** 

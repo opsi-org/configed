@@ -16,7 +16,8 @@ public class CommandOpsiPackageManagerInstall extends CommandOpsiPackageManager 
 	String depot = "";
 	String verbosity = "";
 	String freeInput = "";
-	
+	String property = " -p keep ";
+
 	String updateInstalled = "";
 	String setupInstalled = "";
 	// String overwriteExisting = "";
@@ -31,68 +32,78 @@ public class CommandOpsiPackageManagerInstall extends CommandOpsiPackageManager 
 	{
 		return "CommandOpsiPackageManagerInstall";
 	}
+
 	@Override
 	public String getBasicName()
 	{
 		return "opsi-package-manager";
 	}
+
 	@Override
 	public String getMenuText()
 	{
 		return configed.getResourceValue("SSHConnection.command.opsipackagemanager_install");
 	}
+
 	@Override
 	public String getParentMenuText()
 	{
 		// return "Package-Manager";
 		return super.getMenuText();
 	}
+
 	@Override
 	public String getToolTipText()
 	{
 		return configed.getResourceValue("SSHConnection.command.opsipackagemanager_install.tooltip");
 	}
+
 	@Override
 	public boolean isMultiCommand()
 	{
 		return isMultiCommand;
 	}
+
 	@Override
 	public String getCommand()
 	{
-		command = "opsi-package-manager -q " + verbosity + depot + freeInput + opsiproduct;
+		command = "opsi-package-manager -q " + verbosity + updateInstalled  + setupInstalled + property + depot + freeInput + opsiproduct;
 		if (needSudo())	return SSHCommandFactory.getInstance().sudo_text +" "+ command + " 2>&1";
 		return command + " 2>&1";
 	}
+
 	@Override
 	public String getCommandRaw()
 	{
 		return command;
 	}
+
 	@Override
 	public int getPriority()
 	{
 		return priority;
 	}
+
 	@Override
 	public void startParameterGui()
 	{
 		dialog = new SSHPackageManagerInstallParameterDialog();
 	}
+
 	@Override
 	public void startParameterGui(ConfigedMain main)
 	{
 		dialog = new SSHPackageManagerInstallParameterDialog(main);
 	}
+
 	@Override
 	public SSHConnectionExecDialog startHelpDialog()
 	{
 		SSHCommand command = new CommandHelp(this);
-		// SSHConnectExec exec = new SSHConnectExec();
-		SSHConnectExec exec = new SSHConnectExec(command, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
-		// exec.exec(command, true, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
+		SSHConnectExec exec = new SSHConnectExec( command);
 		return (SSHConnectionExecDialog) exec.getDialog();
 	}
+
 	@Override
 	public FGeneralDialog getDialog()
 	{
@@ -104,12 +115,14 @@ public class CommandOpsiPackageManagerInstall extends CommandOpsiPackageManager 
 		if (prod != "") opsiproduct = " -i " + prod;
 		else opsiproduct = "";
 	}
+
 	public void setDepot(String dep)
 	{
 		if (dep != "")
 			depot = " -d " + dep;
 		else depot = "";
 	}
+
 	public void setVerbosity(int v_sum)
 	{
 		String v = "";
@@ -118,14 +131,29 @@ public class CommandOpsiPackageManagerInstall extends CommandOpsiPackageManager 
 		verbosity = " -" + v + " ";
 		if (v_sum==0) verbosity = "";
 	}
+
 	public void setFreeInput(String fI)
 	{
 		freeInput = " " + fI ;
 	}
+
 	public boolean checkCommand()
 	{
 		if (opsiproduct == "") return false;
 		return true;
+	}
+
+	public void setProperty(boolean keep_depot_defaults)
+	{
+		if (keep_depot_defaults)
+			property = " -p keep ";
+		else
+			property = " -p package ";
+	}
+
+	public String getProperty()
+	{
+		return property;
 	}
 
 	public void setUpdateInstalled(boolean u)
@@ -133,6 +161,7 @@ public class CommandOpsiPackageManagerInstall extends CommandOpsiPackageManager 
 		if (u) updateInstalled = " --update ";
 		else updateInstalled = "";
 	}
+	
 	public void setSetupInstalled(boolean s)
 	{
 		if (s) setupInstalled = " --setup ";

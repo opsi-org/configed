@@ -39,6 +39,7 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 	
 	private SortedMap<String, Object> data; //shall be sorted
 	private Map<String, Object> oridata; //we keep the original data for writing back changed values
+	private Map<String, Object> defaultData; //the shadow default values of all data
 	private Vector<String> keys;
 	
 	private ListModelProducerForVisualDatamap modelProducer;
@@ -56,9 +57,11 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 		this.modelProducer = modelProducer;
 	}
 	
-	public void setOptions( Map<String, ListCellOptions> optionsMap )
+	public void setOptions( Map<String, ListCellOptions> optionsMap, Map<String, Object> defaultData )
 	{
 		this.optionsMap = optionsMap;
+		this.defaultData = defaultData;
+		defaultData = new HashMap<String, Object>();
 	}
 	
 	
@@ -82,6 +85,13 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 	{
 		return data;
 	}
+	
+	/*
+	private Map<String, Object> getDefaultData()
+	{
+		return defaultData;
+	}
+	*/
 	
 	@Override
 	public String toString()
@@ -150,15 +160,20 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 	}
 	
 	
-	public void addEntry(String key, Object newval)
+	public void addEntry(String key, Object newval, boolean toStore)
 	{
 		data.put (key, newval);
 		oridata.put (key, newval);
 		logging.debug(this, " keys " + keys);
 		keys = new Vector(data.keySet());
 		logging.debug(this, " new keys  " + keys);
-		putEntryIntoStoredMaps(key,newval);
+		if (toStore) putEntryIntoStoredMaps(key,newval, toStore);
 		fireTableDataChanged();
+	}
+	
+	public void addEntry(String key, Object newval)
+	{
+		addEntry(key, newval, true);
 	}
 	
 	public void addEntry(String key)
@@ -230,32 +245,69 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 	{
 		if (data == null)  return "";
 		
-		Object result = null;
 		//logging.info(this, "getValueAt based on keys " + keys);
 		//logging.info(this, "getValueAt:  " + row + ", " + col);
 		//logging.info(this, "getValueAt storeData " + storeData);
 		
+		
+		String key = null;
+		Object result = null;
+		try
+		{
+			key = keys.get(row);
+		}
+		catch (Exception ex)
+		{
+			result = "keys " + keys + " row " + row + " : " + ex.toString();
+		}
+			
+		if (result != null)
+			return result;
+		
 		switch(col)
 		{
 			case 0 :  
-				try
-				{
-					result = keys.get(row);  
-				}
-				catch(Exception ex)
-				{
-					logging.info(this, "keys " + keys + " row " + row);
-					result = "";
-				}
+				result = key;
 				break;
 			case 1 :  
-				//if ( (keys.get(row) ).indexOf("password") > -1)
-				//	result = "***";
-				//else
-				result = data.get (keys.get(row)) ; 
+				result = data.get (key) ;
+				/*
+				if (key.equals  ("test456"))
+				{
+					logging.info(this, " result for " + key + ": " + result  + " is null  " + (result == null)
+						+ " class " + result.getClass() +  " equals null " + result.equals( null ) 
+						+ " String value equals \"null\" " + (result.toString()).equals("null"));
+					if (result != null && result instanceof java.util.List)
+					{
+						logging.info(this, " result size for " + key + " " + ((java.util.List)(result)).size());
+						if ( ((java.util.List)(result)).size() > 0)
+							logging.info(this, " result.get(0) for " + key + " is null " + (((java.util.List)(result)).get(0) == null)); 
+					}
+							
+					logging.info(this, " optionsMap for " + key + ": " + optionsMap.get(key) );
+					logging.info(this, " optionsMap for " + key + ": " + optionsMap.get(key).getDefaultValues() );
+				}
+				*/
+				
+				//if there is no true result left (probably because of eliminating the key) we deliver the default value
+				//logging.info(this, "getValueAt "  + row + ", " + col + " result was " + result );
+				if (result != null &&  result instanceof java.util.List)
+				{
+					java.util.List li = (java.util.List) result;
+					if (li.size() > 0 && li.get(0) == null && optionsMap != null)
+					{
+						result = defaultData.get(key);
+						logging.info(this, "getValueAt "  + row + ", " + col + " result corrected for key  " + key + ": " +  result );
+					}
+				}
+						
 				break; 
 				//data.get (keys.get(row)).toString();  break;
 		}
+		
+		if (result == null)
+			return "";
+		
 		return result;
 	}
 
@@ -319,7 +371,7 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 		}
 	}
 		
-	void removeEntryFromStoredMaps(String myKey)
+	public void removeEntryFromStoredMaps(String myKey)
 	{
 		if (storeData != null)
 		{
@@ -335,8 +387,15 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 		}
 	}
 	
-	//we put a new entry into each map in the given collection
+	//we put a new entry into each map in the given collection and preserve the change data
 	void putEntryIntoStoredMaps(String myKey, Object value)
+	{
+		 putEntryIntoStoredMaps(myKey, value, true);
+	}
+		 
+	
+	//we put a new entry into each map in the given collection
+	void putEntryIntoStoredMaps(String myKey, Object value, boolean toStore)
 	{
 		logging.debug(this, "putEntryIntoStoredMaps myKey, value: " + myKey + ", " + value );
 		//logging.debug(this, "putEntryIntoStoredMaps storeData " + storeData);
@@ -367,7 +426,8 @@ public class MapTableModel extends javax.swing.table.AbstractTableModel
 			//logging.debug(this, " ---  datachanged : " + datachanged );
 			//logging.debug(this, " ---  updateCollection: " + updateCollection + "  has size " + updateCollection.size());
 			
-			weHaveChangedStoredMaps();
+			if (toStore)
+				weHaveChangedStoredMaps();
 		}
 	}
 	

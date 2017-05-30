@@ -43,8 +43,31 @@ public class Empty_Command implements SSHCommand
 	private String tooltipText = "";
 	/** integer position **/
 	private int position;
+	private String confidential_information = null;
 
 	private SSHCommandFactory factory = SSHCommandFactory.getInstance();
+	
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return confidential_information;
+	}
+	@Override
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
+	}
 	/**
 	* Creates an empty SSHCommand_Template instance
 	* @return SSHCommand_Template instance

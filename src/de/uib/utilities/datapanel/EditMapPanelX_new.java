@@ -116,6 +116,7 @@ public class EditMapPanelX extends DefaultEditMapPanel implements FocusListener
 		
 		//((PopupMenuTrait)popup).addPopupListenersTo(new JComponent[]{table});
 		
+		logging.info(this, "initPopup (keylistExtendible || keylistEditable " + keylistExtendible + " || " + keylistEditable);
 		
 		if (keylistExtendible || keylistEditable)
 		{

@@ -24,7 +24,7 @@ public class OpsiDataSoftwareOperation extends SoftwareOperation implements Exec
     
     public boolean doesMatch( Client client )
     {
-        //logging.debug(this, "doesMatch starting" );
+        logging.debug(this, "doesMatch starting" );
         OpsiDataClient oClient = (OpsiDataClient) client;
         //logging.debug(this, "doesMatch " + oClient);
         List softwareSet = oClient.getSoftwareList();
@@ -44,6 +44,7 @@ public class OpsiDataSoftwareOperation extends SoftwareOperation implements Exec
             if( value instanceof Map )
             {
                 oClient.setCurrentSoftwareValue( (Map) value );
+                logging.debug(this, " getChildOperations().get(0) instance of " + (getChildOperations().get(0)).getClass());
                 if( ((ExecutableOperation) getChildOperations().get(0)).doesMatch( client ) )
                     return true;
             }
@@ -57,6 +58,7 @@ public class OpsiDataSoftwareOperation extends SoftwareOperation implements Exec
         for( String product: productsWithDefaultValues_client )
         {
               oClient.setCurrentSoftwareValue( productDefaultStates.get(product) );
+              logging.debug(this, " getChildOperations().get(0) check default product values, instance of " + (getChildOperations().get(0)).getClass()); 
               if( ((ExecutableOperation) getChildOperations().get(0)).doesMatch( client ) )
                     return true;
         }

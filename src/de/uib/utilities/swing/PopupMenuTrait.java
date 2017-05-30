@@ -158,7 +158,17 @@ public class PopupMenuTrait extends JPopupMenu
 	}
 	
 	
-	
+	public void setText( int popup, String s) 
+	{
+		int i = listPopups.indexOf(popup);
+		if ( i < 0)
+		{
+			logging.info(this, "setText - popup " + popup + " not in list");
+			return;
+		}
+		
+		menuItems[i].setText( s );
+	}
 	
 	protected void addItem (final int p)
 	{ 

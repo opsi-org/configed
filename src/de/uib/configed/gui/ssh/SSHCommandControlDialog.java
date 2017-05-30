@@ -667,8 +667,9 @@ public class SSHCommandControlDialog extends FGeneralDialog
 	public void doActionTestCommand()
 	{
 		logging.info(this, "doActionTestCommand testCommand building command ...");
-		SSHCommand_Template command = getCommandNow();
-		if (command == null)	return;
+		SSHCommand_Template command = getCommandNow(true /*testing*/);
+		if (command == null) return;
+		if (command.getMenuText() == null) command.setMenuText(factory.menuNew);
 		logging.debug(this, "doActionTestCommand buildCommand " + command.toString());
 		logging.debug(this, "doActionTestCommand buildCommand commandlist " + command.commandlistToString());
 		new SSHConnectExec(cmain, command); //.starting(command);
@@ -697,9 +698,12 @@ public class SSHCommandControlDialog extends FGeneralDialog
 	}
 
 	public SSHCommand_Template getCommandNow()
+	{return getCommandNow(false);}
+	public SSHCommand_Template getCommandNow(boolean testing)
 	{
 		logging.debug(this, "getCommandNow ");
 		String menuText = (String)cb_menuText.getSelectedItem();
+		if (!testing)
 		if (menuText.trim().equals(factory.menuNew))
 			return null;
 		String parent = (String) cb_parentMenuText.getSelectedItem();

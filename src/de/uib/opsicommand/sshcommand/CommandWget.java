@@ -26,6 +26,7 @@ public class CommandWget /*extends*/implements SSHCommand,SSHCommandNeedParamete
 	private String additional_url = " ";
 	private String dir = " ";
 	private String product = " ";
+	private String filename = " ";
 	private String verbosity = " ";
 	private String freeInput = " ";
 	public CommandWget()
@@ -56,6 +57,28 @@ public class CommandWget /*extends*/implements SSHCommand,SSHCommandNeedParamete
 		logging.info(this, "CommandWget product " + getProduct());
 		needParameter = false;
 	}
+	
+	public void setFilename(String newFilename)
+	{
+		if ((newFilename!=null) && (!newFilename.trim().equals("")))
+			filename = " --output-document=" + newFilename + " ";
+		System.out.println("-------------------------------");
+		System.out.println("-------------------------------");
+		System.out.println("set filename " + filename);
+		System.out.println("-------------------------------");
+		System.out.println("-------------------------------");
+	}
+	
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+	
+	
 	public void setAuthentication(String a)
 	{
 		if (a != null)
@@ -103,11 +126,23 @@ public class CommandWget /*extends*/implements SSHCommand,SSHCommandNeedParamete
 	public String getCommand()
 	{
 		if (freeInput != "")
-			command = "wget " + authentication + freeInput + verbosity + dir + url + " " + additional_url;
+			command = "wget " + authentication + filename + freeInput + verbosity + dir + url + " " + additional_url;
 		else			
-			command = "wget " + authentication + verbosity + dir + url + " " + additional_url;
+			command = "wget " + authentication + filename + verbosity + dir + url + " " + additional_url;
 		if (needSudo()) return SSHCommandFactory.getInstance().sudo_text +" "+ command + " 2>&1";
 		return command + " 2>&1";
+	}
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return authentication;
+	}
+	@Override
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
 	}
 	@Override
 	public String getCommandRaw()
@@ -143,7 +178,25 @@ public class CommandWget /*extends*/implements SSHCommand,SSHCommandNeedParamete
 	public SSHConnectionExecDialog startHelpDialog()
 	{
 		SSHCommand command = new CommandHelp(this);
-		SSHConnectExec exec = new SSHConnectExec(command, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
+		
+		/*
+		SSHConnectionExecDialog dialog = new SSHConnectionExecDialog(
+					configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" ",
+					command
+				);
+		
+		JOptionPane.showMessageDialog(	Globals.mainFrame, 
+				  "SSHConnectionExecDialog created", 
+				  "debug",
+				  JOptionPane.OK_OPTION);
+		
+		*/
+		SSHConnectExec exec = 
+			new SSHConnectExec(
+				command
+				)
+			;
+		
 		// SSHConnectExec exec = new SSHConnectExec();
 		// exec.exec(command, true, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
 		return (SSHConnectionExecDialog) exec.getDialog();

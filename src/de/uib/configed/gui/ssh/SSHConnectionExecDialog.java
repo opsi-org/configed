@@ -18,33 +18,43 @@ import javax.swing.border.TitledBorder;
 
 public class SSHConnectionExecDialog extends SSHConnectionOutputDialog
 {
-	public JButton btn_killProcess;
+	protected JButton btn_clear;
+	protected JButton btn_killProcess;
+	protected JButton btn_reload;
 	
-	public SSHConnectionExecDialog(String title , SSHCommand command)
+	protected boolean withReload;
+	protected String reloadInfo;
+	private int infolength = 40;
+
+	private static SSHConnectionExecDialog instance;
+	private SSHConnectionExecDialog()
 	{
-		super(title);
+		super(configed.getResourceValue("SSHConnection.Exec.dialog.commandoutput"));
+		instance = this;
+
 		buildFrame = false;
 		initGUI();
 		
-		if ((command != null) && (command.getDialog() != null)) this.centerOn(command.getDialog());
-		else this.centerOn(de.uib.configed.Globals.mainFrame);
+		this.centerOn(de.uib.configed.Globals.mainFrame);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
-		this.setSize(700, 400);
+		this.setSize(900, 500);
 		logging.info(this, "SSHConnectionExecDialog build" );
-		if (SSHCommandFactory.getInstance().ssh_always_exec_in_background==false)
-			this.setVisible (true);
+		// this.setVisible(true);
+		if (SSHCommandFactory.getInstance().ssh_always_exec_in_background==true)
+			this.setVisible (false);
 		buildFrame = true;
 	}
-	public SSHConnectionExecDialog(SSHCommand command, String title )
-	{ this(title, command);}
-	public SSHConnectionExecDialog(String title )
-	{ this(title, null); }
-	public SSHConnectionExecDialog(SSHCommand c )
-	{ this("", c); }
-	public SSHConnectionExecDialog( )
-	{ this("", null); }
 
+	public static SSHConnectionExecDialog getInstance()
+	{	
+		if (instance != null) 
+		{
+			instance.setVisible(true);
+			return instance;
+		}
+		return new SSHConnectionExecDialog();
+	}
 
 	private void initGUI() 
 	{
@@ -56,6 +66,21 @@ public class SSHConnectionExecDialog extends SSHConnectionOutputDialog
 			);
 			btn_killProcess.setPreferredSize(new Dimension(de.uib.configed.Globals.graphicButtonWidth + 15 ,de.uib.configed.Globals.buttonHeight + 3));
 			btn_killProcess.setToolTipText(configed.getResourceValue("SSHConnection.buttonKillProcess"));
+
+			btn_clear = new de.uib.configed.gui.IconButton(
+				de.uib.configed.configed.getResourceValue("SSHConnection.btn_clear"),
+				"images/user-trash.png","images/user-trash.png","images/user-trash.png",true
+				);
+			btn_clear.setPreferredSize(new Dimension(de.uib.configed.Globals.graphicButtonWidth + 15 ,de.uib.configed.Globals.buttonHeight + 3));
+			btn_clear.setToolTipText(configed.getResourceValue("SSHConnection.btn_clear"));
+			btn_clear.addActionListener(new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						clear();
+					}
+				}
+			);
 			createLayout(konsolePanelLayout, jScrollPane,de.uib.configed.Globals.gapSize,de.uib.configed.Globals.gapSize, true);
 			createLayout(mainPanelLayout, inputPanel,0,0, false);
 		}
@@ -66,19 +91,25 @@ public class SSHConnectionExecDialog extends SSHConnectionOutputDialog
 	}
 
 	public boolean showResult = true;
-	public void setVisibility(boolean v)
-	{
-		this.setVisible(v);
-	}
+	
 	public void setStatusFinish()
 	{
-		if (showResult) setVisibility(true);
+		if (showResult) setVisible(true);
 		else cancel();
 	}
-
+	
+	public void addKillProcessListener(ActionListener l)
+	{
+		btn_killProcess.addActionListener(l);
+	}
+	public void removeKillProcessListener(ActionListener l)
+	{
+		btn_killProcess.removeActionListener(l);
+	}
+	
 	private void createLayout(GroupLayout layout, Component comp, int vgap, int hgap, boolean addInputField)
 	{
-		int pref = GroupLayout.PREFERRED_SIZE;
+		int pref = de.uib.configed.Globals.buttonHeight; 
 		int max = Short.MAX_VALUE;
 		GroupLayout.Alignment leading = GroupLayout.Alignment.LEADING;
 		layout.setAutoCreateGaps(true);
@@ -88,6 +119,7 @@ public class SSHConnectionExecDialog extends SSHConnectionOutputDialog
 		if (addInputField)
 			verticalGroup.addGroup(layout.createParallelGroup()
 				.addGap(vgap, vgap, vgap)
+				.addComponent(btn_clear,pref, pref,pref )
 				.addComponent(btn_killProcess,pref, pref,pref )
 				.addComponent(btn_close,pref, pref,pref )
 				.addGap(vgap)
@@ -103,12 +135,25 @@ public class SSHConnectionExecDialog extends SSHConnectionOutputDialog
 		if (addInputField)
 			 horizontalGroup.addGroup(layout.createSequentialGroup()
 				.addGap(hgap, hgap, max)
-				.addComponent(btn_killProcess,pref, pref,pref )
-				.addComponent(btn_close,pref, pref,pref )
+				.addComponent(btn_clear,de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth,de.uib.configed.Globals.iconWidth )
+				.addComponent(btn_killProcess,de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth,de.uib.configed.Globals.iconWidth )
+				.addComponent(btn_close,de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth,de.uib.configed.Globals.iconWidth )
 				.addGap(hgap)
 			);
 	
 		layout.setVerticalGroup(verticalGroup);
 		layout.setHorizontalGroup(horizontalGroup);	
+	}
+	public void clear()
+	{
+		output.setText("");
+	}
+	@Override
+	public void append(String caller, String line)
+	{
+		int callerlength = caller.length();
+		for (int i=callerlength; i <= infolength; i++)
+			caller += " ";
+		super.append(caller, line);
 	}
 }

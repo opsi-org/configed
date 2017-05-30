@@ -34,7 +34,7 @@ public class PanelLicencesStatistics extends MultiTablePanel
 		//System.out.println( "---------  init PanelLicencesStatistics");
 		
         panelStatistics = new PanelGenEditTable(configed.getResourceValue("ConfigedMain.Licences.SectiontitleStatistics"), 
-			800, false, 0, true);
+			1000, false, 0, true);
 		panelStatistics.setListSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout((JPanel) this);

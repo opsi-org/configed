@@ -20,6 +20,7 @@ public class CommandDeployClientAgent implements SSHCommand, SSHCommandNeedParam
 	private String client = "";
 	private String user = "";
 	private String passw = "";
+	private String startClientd = "";
 	private String keepClientOnFailure = "";
 	private String verbosity = "";
 
@@ -27,7 +28,28 @@ public class CommandDeployClientAgent implements SSHCommand, SSHCommandNeedParam
 	{
 		command = baseName;
 	}
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return passw;
+	}
+	@Override
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
+	}
 
+	@Override 
+	/** 
+	* Sets the command specific error text
+	**/
+	public String get_ERROR_TEXT()
+	{
+		return "ERROR";
+	}
+	
 	@Override
 	public String getId()
 	{
@@ -39,7 +61,13 @@ public class CommandDeployClientAgent implements SSHCommand, SSHCommandNeedParam
 	{
 		return baseName;
 	}
-
+	public void start_clientd(boolean activate)
+	{
+		if (activate)
+			startClientd = " --start-opsiclientd ";
+		else
+			startClientd = " ";
+	}
 	@Override
 	public boolean isMultiCommand()
 	{
@@ -63,7 +91,7 @@ public class CommandDeployClientAgent implements SSHCommand, SSHCommandNeedParam
 	@Override
 	public String getCommand()
 	{
-		command = "/var/lib/opsi/depot/opsi-client-agent/opsi-deploy-client-agent " + verbosity + user + passw + keepClientOnFailure + client ;
+		command = "/var/lib/opsi/depot/opsi-client-agent/opsi-deploy-client-agent " + verbosity + user + passw + startClientd + keepClientOnFailure + client ;
 		if (needSudo()) return SSHCommandFactory.getInstance().sudo_text +" "+ command + " 2>&1";
 		return command + " 2>&1";
 	}
@@ -109,7 +137,16 @@ public class CommandDeployClientAgent implements SSHCommand, SSHCommandNeedParam
 	public SSHConnectionExecDialog startHelpDialog()
 	{
 		SSHCommand command = new CommandHelp(this);
-		SSHConnectExec exec = new SSHConnectExec(command, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
+		SSHConnectExec exec = 
+			new SSHConnectExec(
+				command
+				/*
+				new SSHConnectionExecDialog(
+					configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" ",
+					command)
+				*/
+				)
+			;
 		// exec.exec(command, true, new SSHConnectionExecDialog(command, configed.getResourceValue("SSHConnection.Exec.title") + " \""+command.getCommand() + "\" "));
 		return (SSHConnectionExecDialog) exec.getDialog();
 	}

@@ -11,16 +11,17 @@ import java.sql.Timestamp;
 import javax.swing.ImageIcon;
 
 import de.uib.opsidatamodel.*;
+import de.uib.utilities.logging.*;
 
 /**
  *  This class contains app constants (including some global functions)
- *  Copyright (c) uib 2001-2016
+ *  Copyright (c) uib 2001-2017
  */
 
 public class Globals 
 {
-	public static final String VERSION = "4.0.7.5.7";
-	public static final String VERDATE =  "2016/12/17";
+	public static final String VERSION = "4.0.7.5.22";
+	public static final String VERDATE =  "2017/04/26";
 	public static final String VERHASHTAG =  "";
 	
 	public static final String ZERODATE = ""; 
@@ -28,7 +29,7 @@ public class Globals
 	public static final String REQUIRED_SERVICE_VERSION = "4.0.5";
 	//public static final String RECOMMENDED_OPSI_VERSION = "4.0.6";
 	
-	public static final String COPYRIGHT1 = "Copyright (c) uib 2001 - 2016 (www.uib.de)";
+	public static final String COPYRIGHT1 = "Copyright (c) uib 2001 - 2017 (www.uib.de)";
 	public static final String COPYRIGHT2 = "Open Source license: AGPL v3";
 	
 	public static final String APPNAME = "opsi config editor";
@@ -92,7 +93,7 @@ public class Globals
 	public static final Color backgroundWhite = new Color (245, 245, 245);
 	public static final Color backgroundGrey = new Color (220,220,220);
 	public static final Color backgroundLightGrey = new Color (230,230,230);
-	public static final Color backLightBlue = new Color (220,226,242); // new Color (210,216,232); 
+	public static final Color backLightBlue = new Color (220,228,242); // new Color (210,216,232); 
 	//public static final Color backLight = new Color (220,230,230); 
 	public static final Color backBlue = new Color (200,200,250); 
 	public static final Color backYellow = new java.awt.Color (255, 255, 182);
@@ -211,6 +212,7 @@ public class Globals
 	public static int graphicButtonWidth= 40;
 	
 	public static int checkBoxWidth= 20;
+	public static int comboBoxRowCount = 20;
 	
 	
 	public static final Dimension graphicButtonDimension = new Dimension(graphicButtonWidth, graphicButtonHeight);
@@ -253,6 +255,10 @@ public class Globals
 	public static java.awt.Container container1; //can be changed
 	
 	public static java.awt.Dimension helperFormDimension = new java.awt.Dimension(800, 600);
+	
+	public static int dialogFrameDefaultHeight = 400;
+	public static int dialogFrameDefaultWidth = 800;
+	public static java.awt.Dimension dialogFrameDefaultSize = new java.awt.Dimension(dialogFrameDefaultWidth, dialogFrameDefaultHeight);
 	
 	public static String getResourceValue( String key )
 	{
@@ -453,6 +459,32 @@ public class Globals
 			result = o.toString();
 		return result;
 	}
+	
+	public static boolean checkCollection( Object source, String location, String cName, Object c )
+	{
+		boolean result = (c != null);
+		if (result)
+		{
+			if (c instanceof Collection)
+			{
+				logging.info(source.getClass().getName() + " " + cName + " has size  " + ((Collection)c).size() );
+			}
+			else if (c instanceof Map)
+			{
+				logging.info(source.getClass().getName() + " " + cName + " has size  " + ((Map)c).size() );
+			} 
+			else	
+			{
+				logging.info(source.getClass().getName() + " " + cName + " is neither a Collection nor a Map  ");
+				result = false;
+			}
+		}
+		else 
+			logging.info(source.getClass().getName() + " " + cName + " is null");
+		
+		return result;
+	}
+	
 	
 	public static Color brightenColor(java.awt.Color c)
 	//experimental

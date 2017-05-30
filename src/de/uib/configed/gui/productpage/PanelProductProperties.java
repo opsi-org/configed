@@ -4,7 +4,7 @@ package de.uib.configed.gui.productpage;
  * configed - configuration editor for client work stations in opsi
  * (open pc server integration) www.opsi.org
  *
- * Copyright (C) 2000-2016 uib.de
+ * Copyright (C) 2000-2017 uib.de
  *
  */
 
@@ -125,6 +125,7 @@ public class PanelProductProperties extends JSplitPane
 				public void reload()
 				{
 					logging.info(this, "reload()");
+					
 					mainController.getPersistenceController().productPropertyDefinitionsRequestRefresh();
 					mainController.getPersistenceController().productpropertiesRequestRefresh();
 					super.reload();
@@ -221,7 +222,10 @@ public class PanelProductProperties extends JSplitPane
 							*/
 							//depotsOfPackage.clear();
 							java.util.List<String> depotsOfPackageAsRetrieved = new ArrayList<String>();
+							
 							String versionInfo = "";
+							boolean retrieval  = true;
+							
 							try
 							{
 								 versionInfo = 
@@ -234,21 +238,32 @@ public class PanelProductProperties extends JSplitPane
 									.getProduct2VersionInfo2Depots().get(theTable.getValueAt(row, columnNames.indexOf("productId")))
 									.get(versionInfo);
 									
+								logging.info(this, "valueChanged  versionInfo (depotsOfPackageAsRetrieved == null)  "
+									+ versionInfo + " " 
+									+ (depotsOfPackageAsRetrieved == null) );
+									
 							}
 							catch(Exception ex)
 							{
-								//we did not find a list, probably because of data change
-								logging.info(this, "depotsOfPackageAsRetrieved could not be retrieved for " 
-									+ columnNames.indexOf("productId") + "; " + versionInfo); 
+								retrieval = false;
 							}
+							
+							if  (
+								retrieval //no exception
+								&&  (depotsOfPackageAsRetrieved == null)
+							)
+								retrieval = false;
 									
 							
 							depotsOfPackage = new LinkedList<String>();
 							
-							for (String depot : mainController.getPersistenceController().getHostInfoCollections().getDepots().keySet())
+							if (retrieval)
 							{
-								if (depotsOfPackageAsRetrieved.indexOf(depot) > -1)
-									depotsOfPackage.add(depot);
+								for (String depot : mainController.getPersistenceController().getHostInfoCollections().getDepots().keySet())
+								{
+									if (depotsOfPackageAsRetrieved.indexOf(depot) > -1)
+										depotsOfPackage.add(depot);
+								}
 							}
 							
 							

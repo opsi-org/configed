@@ -40,6 +40,7 @@ public class OpsiProductInfo extends OpsiPackage
 	public OpsiProductInfo(Map<String, Object> m)
 	{
 		super(m);
+		
 		possibleActions = new ArrayList<String>();
 		possibleActions.add(ActionRequest.getState2Label().get(ActionRequest.NONE));
 		//keys are the possible script types
@@ -84,6 +85,8 @@ public class OpsiProductInfo extends OpsiPackage
 			+ " possible actions " +  possibleActions  
 			+ ", hasUserLoginScript " + hasUserLoginScript);
 		//System.exit(0);
+		
+	
 	}
 	
 	
@@ -132,7 +135,8 @@ public class OpsiProductInfo extends OpsiPackage
 	public String toString()
 	{
 		return  getClass().getName() 
-		+ "{productName=" + productName + ";description=" + description 
+		+ "{productId=" + productId
+		+  ";productName=" + productName + ";description=" + description 
 		+ ";possibleActions" + possibleActions + ";hasUserLoginScript=" + hasUserLoginScript
 		+ ";priority=" + priority
 		+ ";description=" + description

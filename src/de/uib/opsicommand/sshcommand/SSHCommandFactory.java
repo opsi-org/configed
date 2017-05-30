@@ -25,6 +25,29 @@ import de.uib.utilities.logging.*;
 **/
 public class SSHCommandFactory
 {
+	/** final string commands for linux terminal **/
+	final public String str_replacement_dir = "*.dir.*";
+										// http://stackoverflow.com/questions/948008/linux-command-to-list-all-available-commands-and-aliases
+	final public String str_command_getLinuxCommands = "COMMANDS=`echo -n $PATH | xargs -d : -I {} find {} -maxdepth 1 -executable -type f -printf '%P\\n'` ; ALIASES=`alias | cut -d '=' -f 1`; echo \"$COMMANDS\"$'\\n'\"$ALIASES\" | sort -u "  ;
+	final public String str_command_getDirectories = "ls --color=never -d *.dir.*/*/";
+	final public String str_command_getOpsiFiles = "ls --color=never *.dir.*/*.opsi";
+	final public String str_command_getVersions = "grep version: *.dir.* --max-count=2  ";
+	final public String str_command_catDir = "cat *.dir.*OPSI/control | grep \"id: \"";
+	final public String str_command_fileexists = "[ -f .filename. ] &&  rm .filename. && echo \"File .filename. removed\" || echo \"File did not exist\"";
+	final public String str_command_fileexists_notremove = "[ -d .filename. ] && echo \"File exists\" || echo \"File not exist\"";
+	// final public String str_command_filezsyncExists = "[ -f *.filename.*.zsync ] &&  rm *.filename.*.zsync && echo \"File *.filename.*.zsync removed\" || echo \"File *.filename.*.zsync did not exist\"";
+	// final public String str_command_filemd5Exists = "[ -f *.filename.*.md5 ] &&  rm *.filename.*.md5 && echo \"File *.filename.*.md5 removed\" || echo \"File *.filename.*.md5 did not exist\"";
+	final public String str_replacement_filename = ".filename.";
+	final public String str_file_exists = "File exists";
+	final public String str_file_not_exists = "File not exists";
+
+	final public String opsipathVarRepository = "/var/lib/opsi/repository/";
+	final public String opsipathVarDepot = "/var/lib/opsi/depot/";
+	// final public String str_command_comparemd5 = " if [ -z $((cat *.product.*.md5" + ") | grep $(md5sum *.product.*  | head -n1 | cut -d \" \" -f1)) ] ;  then echo \"*.md5notequal.*\"; else echo \"*.md5equal.*\"; fi";
+	// final public String str_replacement_product="*.product.*";
+	// final public String str_replacement_equal= "*.md5equal.*";
+	// final public String str_replacement_notequal= "*.md5notequal.*";
+
 	/** ConfigedMain instance **/
 	private ConfigedMain main;
 	private MainFrame mainFrame;
@@ -58,7 +81,8 @@ public class SSHCommandFactory
 	/** setting ssh_always_exec_in_background per default false**/
 	public static boolean ssh_always_exec_in_background = false;
 	/** all static commands which need run-time parameter **/
-	public static List<de.uib.opsicommand.sshcommand.SSHCommand> ssh_commands_param = new LinkedList<de.uib.opsicommand.sshcommand.SSHCommand>(){{
+	public static List<de.uib.opsicommand.sshcommand.SSHCommand> ssh_commands_param 
+	= new LinkedList<de.uib.opsicommand.sshcommand.SSHCommand>(){{
 		// add(new de.uib.opsicommand.sshcommand.CommandOpsiSetRights() );
 		// add(new de.uib.opsicommand.sshcommand.CommandWget() );
 		// add(new de.uib.opsicommand.sshcommand.CommandOpsimakeproductfile() );
@@ -83,16 +107,21 @@ public class SSHCommandFactory
 	/** final static name of field "commands" */
 	final  public String command_map_commands="commands";
 
-	SSHConnect connection = null;
+	SSHConnectExec connection = null;
 	public static String connected = configed.getResourceValue("SSHConnection.connected");
+	public static String connected_not_allowed = configed.getResourceValue("SSHConnection.connected_not_allowed");
 	public static String unknown = configed.getResourceValue("SSHConnection.unknown");
 	public static String not_connected = configed.getResourceValue("SSHConnection.not_connected");
 	
 	// SSHCommandFactory.getInstance().sudo_text
 	public static String sudo_failed_text = configed.getResourceValue("SSHConnection.sudoFailedText");
 	public static String sudo_text = "sudo -S -p \"" + sudo_failed_text + "\" ";
-	
+	final private String opsisetrights = "opsi-set-rights";
 
+	final public String sshusr = "<<!sshuser!>>";
+	final public String sshhst = "<<!sshhost!>>";
+
+	final public String confidential =  "***confidential***";
 	ArrayList<String> createdProducts = new ArrayList<String>();
 	SSHCommandParameterMethods pmethodHandler = null;
 	/**
@@ -102,32 +131,13 @@ public class SSHCommandFactory
 	private SSHCommandFactory(ConfigedMain main)
 	{
 		this.main = main;
+		System.out.println("SSHComandFactory new instance");
 		instance = this;
 		addAditionalParamCommands();
-		connection = new SSHConnect(this.main);
+		connection = new SSHConnectExec(this.main);
 		pmethodHandler = SSHCommandParameterMethods.getInstance(this.main);
 	}
-	private void addAditionalParamCommands()
-	{
-		LinkedList<String> coms = new LinkedList<String>();
 
-		coms.add("opsi-set-rights " + configed.getResourceValue("SSHConnection.command.opsisetrights.additionalPath") + "");
-		ssh_commands_param.add(new SSHCommand_Template("opsi-set-rights", coms, configed.getResourceValue("SSHConnection.command.opsisetrights"), true, null, configed.getResourceValue("SSHConnection.command.opsisetrights.tooltip"), 110));
-		// ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiSetRights() );
-		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandWget() );
-		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsimakeproductfile() );
-		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiPackageManagerInstall() );
-		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiPackageManagerUninstall() );
-		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandDeployClientAgent() );
-	}
-	public ArrayList<String> getProductHistory()
-	{
-		return createdProducts;
-	}
-	public void addProductHistory(String prod)
-	{
-		createdProducts.add(prod);
-	}
 	/**
 	* Method allows only one instance
 	* Design: Singelton-Pattern
@@ -153,6 +163,43 @@ public class SSHCommandFactory
 		else 
 			return new SSHCommandFactory(null);
 	}
+
+	protected Set<String> allowedHosts = new HashSet<String>();
+	
+	public void setAllowedHosts(Collection<String> allowed)
+	{
+		allowedHosts.addAll (allowed );
+	}
+	public Set<String> getAllowedHosts()
+	{return allowedHosts;}
+	private void addAditionalParamCommands()
+	{
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiPackageManagerInstall() );
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiPackageManagerUninstall() );
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsimakeproductfile() );
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandWget() );
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandModulesUpload() );
+
+		// Funktioniert nicht wie gewünscht. Optionaler Parameter "<<<....>>>" wird nicht abgefragt.
+		// ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiSetRights() ); 
+		// SSHCommand csetrights = new de.uib.opsicommand.sshcommand.CommandOpsiSetRights();
+		// LinkedList<String> coms = new LinkedList<String>()
+		// {{
+		// 	add(csetrights.getCommandRaw());
+		// }};
+		// ssh_commands_param.add(new SSHCommand_Template(csetrights, new LinkedList<String>(){{add(csetrights.getCommandRaw());}} ));
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandOpsiSetRights());
+		// ssh_commands_param.add(new SSHCommand_Template(opsisetrights, coms, configed.getResourceValue("SSHConnection.command.opsisetrights"), true, null, configed.getResourceValue("SSHConnection.command.opsisetrights.tooltip"), 110));
+		ssh_commands_param.add(new de.uib.opsicommand.sshcommand.CommandDeployClientAgent() );
+	}
+	public ArrayList<String> getProductHistory()
+	{
+		return createdProducts;
+	}
+	public void addProductHistory(String prod)
+	{
+		createdProducts.add(prod);
+	}
 	public SSHCommandParameterMethods getParameterHandler()
 	{ 
 		if (pmethodHandler != null) return pmethodHandler;
@@ -162,16 +209,6 @@ public class SSHCommandFactory
 			return pmethodHandler;
 		}
 	}
-
-	// public String[] getParameterMethods()
-	// {
-	// 	return getParameterHandler().getParameterMethods();
-	// }
-
-	// public String[] getParameterFormats()
-	// {
-	// 	return getParameterHandler().getParameterFormats();
-	// }
 
 	public void setMainFrame(MainFrame mf)
 	{
@@ -210,7 +247,7 @@ public class SSHCommandFactory
 	public SSHCommand_Template buildSSHCommand(String id, String pmt, String mt, String ttt, int p, boolean ns, LinkedList<String> c)
 	{
 		SSHCommand_Template com = new SSHCommand_Template(id, 
-			c, // Achtung Reihenfolge könnte sich ändern !" toList = ArrayList! JsonArray muss nicht sortiert sein!"
+			c, // Achtung Reihenfolge der Elemente in Arrays c könnte sich ändern !" toList = ArrayList! JsonArray muss nicht sortiert sein!"
 			mt, ns, pmt, ttt, p);
 		return com;
 	}
@@ -445,7 +482,6 @@ public class SSHCommandFactory
 			else return false;
 		}
 		return false;
-		
 	}
 
 	/**
@@ -487,40 +523,45 @@ public class SSHCommandFactory
 	{
 		return connection_state;
 	}
+	public void testConnection(SSHConnectExec connection)
+	{
+		this.connection.disconnect();
+		this.connection = connection;
+		testConnection(connection.getConnectedUser(), connection.getConnectedHost());
+	}
 	public void testConnection(String user, String host)
 	{
-		boolean result = connection.connectTest();
-		if (result)
-		{
-			logging.info(this, "testConnection connected");
-			connection_state = connected;
+		SSHCommand com = new Empty_Command("ls", "ls", "", false);
+		String result = this.connection.exec(com, false);
 
-			updateConnectionInfo(connection_state);
-			// configedMain.reloadSSHConnectionInfoMenu("connected");
+		logging.debug(this, "result: " + result);
+		logging.debug(this, "connection: " + connection);
+		logging.debug(this, "connection connected: " + connection.isConnected());
+		logging.debug(this, "host: " + connection.getConnectedHost());
+		logging.debug(this, "user: " + connection.getConnectedUser());
+
+		if ((connection.isConnected()) && ((result == null)  || (result.trim().equals("null"))))
+		{
+			logging.info(this, "testConnection not allowed");
+			connection_state = connected_not_allowed;
+			logging.warning(this, "cannot connect to " + user + "@" + host);
 		}
-		else if (!result)
+		else if ((result == null) || (com.equals(com.get_ERROR_TEXT())))
 		{
 			logging.info(this, "testConnection not connected");
 			connection_state = not_connected;
-			updateConnectionInfo(connection_state);
-			// configedMain.reloadSSHConnectionInfoMenu("not_connected");
 			logging.warning(this, "cannot connect to " + user + "@" + host);
 		}
-		else
+		else if (!result.equals(com.get_ERROR_TEXT()))
 		{
-			connection_state = unknown;
-			updateConnectionInfo(connection_state);
+			logging.info(this, "testConnection connected");
+			connection_state = connected;
 		}
+		else connection_state = unknown;
+		updateConnectionInfo(connection_state);
 		logging.info(this, "testConnection connection state " + connection_state);
-		// if (SSHConfigDialog.getInstance(mainFrame, this, readLocallySavedServerNames()); != null) setStateLabel(String str)
 	}
-	// public void updateConnectionInfo(String status)
-	// {
-	// 	main.reloadSSHConnectionInfoMenu(status);
 
-	// }
-
-	// public void reloadSSHConnectionInfoMenu(String status)
 	public void updateConnectionInfo(String status)
 	{
 		logging.info(this, "mainFrame " + mainFrame);

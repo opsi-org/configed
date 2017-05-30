@@ -23,6 +23,7 @@ import de.uib.configed.gui.GeneralFrame;
 import java.awt.*;
 import javax.swing.*;
 import java.io.*;
+import java.util.*;
 import de.uib.utilities.logging.*;
 import de.uib.opsicommand.sshcommand.*;
 /**
@@ -31,23 +32,24 @@ import de.uib.opsicommand.sshcommand.*;
 public class SSHConnect
 {
 	/** Hostname for server to connected with **/
-	protected static String host;
+	protected String commandInfoName = null;
+	protected String host;
 	/** Username for server to connected as **/
-	protected static String user;
+	protected String user;
 	/** Port for server to connected as**/
-	public final static String default_port = "22";
-	protected static String port = default_port;
+	public final String default_port = "22";
+	protected String port = default_port;
 	/** Password for server and username**/
-	protected static String password;
+	protected String password;
 	/** If needed the sudo password **/
 	protected String pw_sudo;
 	/** If needed the root password **/
 	protected String pw_root;
 	private JSch jsch= null;  
 	protected Session session = null;
-	protected static ConfigedMain main;
+	protected ConfigedMain main;
 	
-
+	SSHCommandFactory factory = SSHCommandFactory.getInstance();
 	/**
 	* Instanz for SSH connection {@link de.uib.configed.ConfigedMain}
 	* @param main configed main class
@@ -58,6 +60,7 @@ public class SSHConnect
 		// if (main.SSHKEY != null)
 		// 	useKeyfile = true;
 	}
+	
 	
 	/**
 	* Check if result is not an error.
@@ -156,10 +159,14 @@ public class SSHConnect
 	/**
 	* Check authentification data. If null pbjects use login data from configedmain.
 	**/
-	public static void checkUserData()
+	public void checkUserData()
 	{
 		// logging.info(this, "checkUserData " + "");
-		if (host == null) host=main.HOST;
+		if (host == null) host=getHostnameFromOpsihost(main.HOST);
+		logging.info(" checkUserData allowedHosts contains?? host " + factory.getAllowedHosts() + " -- " + host);
+		if (!factory.getAllowedHosts().contains(host))
+			host = "";
+		
 		if (port == null) port = default_port;
 		if (user == null) user=main.USER;
 		if ((password == null) && (!useKeyfile)) password=main.PASSWORD;
@@ -173,16 +180,16 @@ public class SSHConnect
 	* @param u Username
 	* @param ps Password
 	**/
-	public static void setUserData(String h, String u, String ps, String p)
+	public void setUserData(String h, String u, String ps, String p)
 	{
-		host = h;
+		host = getHostnameFromOpsihost(h);
 		port = p;
 		user = u;
 		password = ps;
 		checkUserData();
 	}
 
-	public static void setPw(String ps)
+	public void setPw(String ps)
 	{
 		password = ps;
 		checkUserData();
@@ -207,11 +214,21 @@ public class SSHConnect
 		checkUserData();
 		return host;
 	}
+	
+	public String getHostnameFromOpsihost(String host)
+	{
+		String result = null;
+		if (host != null && host.indexOf(":") > -1)
+			result = host.substring(0,host.indexOf(":"));
+		else
+			result = host;
+		return result;
+	}
 
 	/**
 	* @return String of connected user
 	*/
-	public static String getConnectedUser()
+	public String getConnectedUser()
 	{
 		checkUserData();
 		return user;
@@ -220,7 +237,7 @@ public class SSHConnect
 	/**
 	* @return String of connected port
 	*/
-	public static String getConnectedPort()
+	public String getConnectedPort()
 	{
 		return port;
 	}
@@ -228,19 +245,19 @@ public class SSHConnect
 	/**
 	* @return String of connected password
 	*/
-	public static String getConnectedPw()
+	public String getConnectedPw()
 	{
 		checkUserData();
 		return password;
 	}
-	protected static boolean useKeyfile;
-	protected static String keyfilepath = "";
-	protected static String keyfilepassphrase = "";
-	public static void useKeyfile(boolean v)
+	protected boolean useKeyfile;
+	protected String keyfilepath = "";
+	protected String keyfilepassphrase = "";
+	public void useKeyfile(boolean v)
 	{ useKeyfile(v, null, null); }
-	public static void useKeyfile(boolean v, String k)
+	public void useKeyfile(boolean v, String k)
 	{ useKeyfile(v, k, null); }
-	public static void useKeyfile(boolean v, String k, String p)
+	public void useKeyfile(boolean v, String k, String p)
 	{
 		useKeyfile = v;
 		keyfilepath = k;
@@ -258,7 +275,7 @@ public class SSHConnect
 
 	public boolean  connectTest()
 	{
-		return connect(new Empty_Command("test", "test", "", false));
+		return connect(new Empty_Command("ls", "ls", "", false));
 	}
 	/**
 	* Connect to server und check if command (if given) needs root rights call {@link getRootPassword(Component)}.
@@ -268,17 +285,6 @@ public class SSHConnect
 	public boolean connect(SSHCommand command)
 	{
 		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
-		logging.info(this, "================================================");
 		if (command != null)
 			logging.info(this, "connect command " + command.getMenuText() );
 		else logging.info(this, "connect command null" );
@@ -286,28 +292,30 @@ public class SSHConnect
 		{
 			jsch=new JSch(); 
 			checkUserData();
-			logging.info(this, "connect this.host " + this.host);
-			logging.info(this, "connect this.user " + this.user);
+			logging.info(this, "connect this.host " + host);
+			logging.info(this, "connect this.user " + user);
 
-			if (this.useKeyfile)
+			if (useKeyfile)
 			{
 				if (keyfilepassphrase != "")
-					jsch.addIdentity(this.keyfilepath, this.keyfilepassphrase);
-				jsch.addIdentity(this.keyfilepath);
-				logging.info(this, "connect this.keyfilepath " + this.keyfilepath);
-				logging.info(this, "connect useKeyfile " + this.useKeyfile + " addIdentity " + this.keyfilepath);
-				session = jsch.getSession(this.user,this.host, Integer.valueOf(this.port));
+					jsch.addIdentity(keyfilepath, keyfilepassphrase);
+				jsch.addIdentity(keyfilepath);
+				logging.info(this, "connect this.keyfilepath " + keyfilepath);
+				logging.info(this, "connect useKeyfile " + useKeyfile + " addIdentity " + keyfilepath);
+				session = jsch.getSession(user,host, Integer.valueOf(this.port));
 			}
 			else
 			{
-				session = jsch.getSession(this.user,this.host, Integer.valueOf(this.port));
-				logging.info(this, "connect this.password ***confidential*** " );
-				session.setPassword(this.password);
+				session = jsch.getSession(user,host, Integer.valueOf(port));
+				logging.info(this, "connect this.password " + SSHCommandFactory.getInstance().confidential );
+				session.setPassword(password);
 				logging.info(this, "connect useKeyfile " + useKeyfile + " use password …");
 			}
 			session.setConfig("StrictHostKeyChecking", "no");
 			session.connect();
-			logging.info(this, "connect " + this.user + "@" + this.host);
+			logging.info(this, "connect " + user + "@" + host);
+
+
 			return true;
 		}
 		catch (com.jcraft.jsch.JSchException authfail)

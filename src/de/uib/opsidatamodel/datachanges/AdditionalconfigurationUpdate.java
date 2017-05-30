@@ -35,7 +35,7 @@ public class AdditionalconfigurationUpdate implements UpdateCommand
     		{
     			de.uib.configed.type.ConfigName2ConfigValue configState = (de.uib.configed.type.ConfigName2ConfigValue) newdata;
     			//logging.debug(this, "retrieved property:" + configState.getRetrieved());
-    			persis.setAdditionalConfiguration(objectId, newdata);
+    			persis.setAdditionalConfiguration(objectId, configState);
     			//for opsi 4.0, this only collects the data 
     		}
     }

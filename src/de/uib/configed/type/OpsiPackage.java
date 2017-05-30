@@ -27,7 +27,8 @@ public class OpsiPackage
 	
 	protected String representation; 
 	
-	public static final String SERVICEkeyPRODUCT_ID = "productId";
+	public static final String DBkeyPRODUCT_ID = "productId";
+	public static final String SERVICEkeyPRODUCT_ID0 = "id";
 	public static final String SERVICEkeyPRODUCT_VERSION = "productVersion";
 	public static final String SERVICEkeyPACKAGE_VERSION = "packageVersion";
 	public static final String SERVICEkeyPRODUCT_TYPE = "productType";
@@ -39,7 +40,7 @@ public class OpsiPackage
 	public static final ArrayList<String> SERVICE_KEYS;
 	static{
 		SERVICE_KEYS = new ArrayList<String>();
-		SERVICE_KEYS.add(SERVICEkeyPRODUCT_ID);
+		SERVICE_KEYS.add(SERVICEkeyPRODUCT_ID0);
 		SERVICE_KEYS.add(SERVICEkeyPRODUCT_VERSION);
 		SERVICE_KEYS.add(SERVICEkeyPACKAGE_VERSION);
 		SERVICE_KEYS.add(SERVICEkeyPRODUCT_TYPE);
@@ -47,7 +48,12 @@ public class OpsiPackage
 	
 	public final static Vector<String> COLUMN_NAMES;
 	static{
-		COLUMN_NAMES = new Vector<String>(SERVICE_KEYS);
+		COLUMN_NAMES = new Vector<String>();
+		COLUMN_NAMES.add(DBkeyPRODUCT_ID);
+		COLUMN_NAMES.add(SERVICEkeyPRODUCT_VERSION);
+		COLUMN_NAMES.add(SERVICEkeyPACKAGE_VERSION);
+		COLUMN_NAMES.add(SERVICEkeyPRODUCT_TYPE);
+		
 	}
 	
 	//public class PackageRow extends Vector<Object>;
@@ -75,7 +81,10 @@ public class OpsiPackage
 		else 
 			this.productType = -1;
 		
+		
 		logging.debug(this, "created : " + productId + ", " + productType + ", " + versionInfo);
+		
+		
 		
 		representation = buildRepresentation();
 	}
@@ -83,12 +92,19 @@ public class OpsiPackage
 	public OpsiPackage(Map<String, Object> m)
 	{
 		this(
-			"" + m.get(SERVICEkeyPRODUCT_ID),
+			"" + m.get(DBkeyPRODUCT_ID),
 			"" + m.get(SERVICEkeyPRODUCT_VERSION),
 			"" + m.get(SERVICEkeyPACKAGE_VERSION),
 			"" + m.get(SERVICEkeyPRODUCT_TYPE)
 		);
 		logging.debug(this, "built from " + m);
+		
+		/*
+		if (m.get("id") == null)
+		{
+			logging.warning(this, " has unexpected key 'productId' with value " +  m.get("productId") +  " from Map " + m );
+		}
+		*/
 	}
 	
 	public String getProductId()
@@ -157,7 +173,7 @@ public class OpsiPackage
 		return  
 			//getClass().getName() + 
 		"{"
-		+ SERVICEkeyPRODUCT_ID + ":\"" + productId + "\";"
+		+ DBkeyPRODUCT_ID + ":\"" + productId + "\";"
 		+ SERVICEkeyPRODUCT_TYPE + ":\"" + giveProductType(productType) + "\";"
 		+ VERSION_INFO + ":\"" + versionInfo 
 		+ "\"}";

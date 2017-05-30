@@ -41,7 +41,7 @@ public class PanelAssignToLPools extends MultiTablePanel
 	protected int minVSize = 50;
 
 
-	protected int tablesMaxWidth = 600;
+	protected int tablesMaxWidth = 1000;
 	protected int tablesMaxHeight =Short.MAX_VALUE ;
 
 	/** Creates new form panelAssignToLPools */

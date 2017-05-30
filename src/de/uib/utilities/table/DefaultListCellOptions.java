@@ -11,6 +11,7 @@ implements ListCellOptions
 	 java.util.List defaultValues;
 	 int selectionMode;
 	 boolean editable;
+	 String description;
 	 
 	 public DefaultListCellOptions()
 	 {
@@ -18,18 +19,25 @@ implements ListCellOptions
 	 	 defaultValues = new ArrayList();
 	 	 selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION;
 	 	 editable = true;
+	 	 description = "";
 	 }
 	 
 	 public DefaultListCellOptions(
 	 	 java.util.List possibleValues,
 	 	 java.util.List defaultValues,
 	 	 int selectionMode,
-	 	 boolean editable)
+	 	 boolean editable,
+	 	 String description)
+	 	 
 	{
 		this.possibleValues = possibleValues;
 	 	this.defaultValues = defaultValues;
 	 	this.selectionMode = selectionMode;
 	 	this.editable = editable;
+	 	if (description == null)
+	 		this.description  = ""; 
+	 	else 
+	 		this.description= description;
 	}
 	
 	
@@ -46,7 +54,8 @@ implements ListCellOptions
 				possibleValues, 
 				defaultValues, 
 				ListSelectionModel.SINGLE_SELECTION,
-				editable
+				editable,
+				""
 			);
 	}
 	
@@ -59,7 +68,8 @@ implements ListCellOptions
 				possibleValues, 
 				null, //defaultValues, 
 				ListSelectionModel.SINGLE_SELECTION,
-				editable
+				editable,
+				""
 			);
 	}
 	
@@ -72,7 +82,8 @@ implements ListCellOptions
 				possibleValues, 
 				null, //defaultValues, 
 				ListSelectionModel.MULTIPLE_INTERVAL_SELECTION,
-				editable
+				editable,
+				""
 			);
 	}
 	
@@ -101,6 +112,13 @@ implements ListCellOptions
 	{
 		return editable;
 	}
+	
+	public String getDescription()
+	{
+		return description;
+	}
+		
+		
 	
 	@Override
 	public String toString()

@@ -54,7 +54,7 @@ public class OpsiDataBackend extends Backend
 	protected SelectOperation createOperation( SelectOperation operation )
 	{
 
-		logging.debug(this, "createOperation operation, data, element: " + operation.getClassName() + ", "
+		logging.info(this, "createOperation operation, data, element: " + operation.getClassName() + ", "
 		              + operation.getData().toString() + ",  " + operation.getElement().getClassName());
 
 		// Host
@@ -93,7 +93,7 @@ public class OpsiDataBackend extends Backend
 		else if( element instanceof SoftwareInstallationStatusElement )
 			attributeTextSoftware = ProductState.KEY_installationStatus;
 		else if( element instanceof SoftwareActionProgressElement )
-			attributeTextSoftware = ProductState.KEY_installationStatus;
+			attributeTextSoftware = ProductState.KEY_actionProgress;
 		else if( element instanceof SoftwareActionResultElement )
 			attributeTextSoftware = ProductState.KEY_actionResult;
 		else if( element instanceof SoftwareLastActionElement )

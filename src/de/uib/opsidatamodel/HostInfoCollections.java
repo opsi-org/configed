@@ -39,7 +39,7 @@ public abstract class HostInfoCollections
 	
 	public abstract LinkedList<String> getDepotNamesList(); //master depots in display order
 	
-	protected abstract Map<String, Boolean> getMapOfPCs();
+	//protected abstract Map<String, Boolean> getMapOfPCs();
 	
 	public abstract Map<String, String> getMapPcBelongsToDepot();
 	
@@ -60,7 +60,7 @@ public abstract class HostInfoCollections
 	
 	public abstract void setLocalHostInfo(String hostId, String depotId, HostInfo hostInfo);
 	
-	public abstract void intersectWithMapOfPCs(List<String> clientSelection);
+	//public abstract void intersectWithMapOfPCs(List<String> clientSelection);
 	
 	protected abstract void retrieveOpsiHosts();
 	

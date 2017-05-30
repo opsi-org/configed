@@ -29,8 +29,10 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 	private JLabel lbl_userdata = new JLabel();
 	private JLabel lbl_verbosity = new JLabel();
 	private JLabel lbl_fullCommand = new JLabel();
+	private JLabel lbl_start_clientd = new JLabel();
 
 	private JButton btn_execute;
+	private JButton btn_copy_selected_clients;
 	private JButton btn_close;
 	private JButton btn_help;
 
@@ -38,12 +40,13 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 	private JTextField tf_user;
 	private JPasswordField tf_passw;
 	private JCheckBox cb_passw_echo;
+	private JCheckBox cb_start_clientd;
 	private JButton btn_showPassw;
 	private JComboBox cb_verbosity;
 	private String defaultWinUser = "";
 	
-	final private int frameLength = 500;
-	final private int frameHight = 330;
+	//final private int frameLength = 500;
+	//final private int frameHight = 400;
 	private CommandDeployClientAgent commandDeployClientAgent = new CommandDeployClientAgent();
 	private ConfigedMain main;
 
@@ -59,9 +62,9 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 
 		init();
 		pack();
+		this.setSize(de.uib.configed.Globals.dialogFrameDefaultSize);
 		this.centerOn(de.uib.configed.Globals.mainFrame);
 		this.setBackground(Globals.backLightBlue);
-		this.setSize(frameLength, frameHight);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setVisible (true);
 		logging.info(this, "SSHDeployClientAgentParameterDialog build");
@@ -98,11 +101,11 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 		{
 			if (tf_passw == null)
 			{
-				tf_passw=new JPasswordField("nt123", 15);
+				tf_passw=new JPasswordField("", 15);
 				tf_passw.setEchoChar('*');
 			}
 			tf_passw.setText((String) result_config_list.get(0));
-			logging.info(this, "key_ssh_shell_active ***confidential***");
+			logging.info(this, "key_ssh_shell_active " + SSHCommandFactory.getInstance().confidential);
 			// jMenuRemoteTerminal.setEnabled((Boolean) shell_list.get(0));
 		}
 	}
@@ -207,6 +210,9 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 		}
 		{
 			lbl_userdata.setText(configed.getResourceValue("SSHConnection.ParameterDialog.deploy-clientagent.targetclient_authentication"));
+			lbl_start_clientd.setText(configed.getResourceValue("SSHConnection.ParameterDialog.deploy-clientagent.lbl_start_clientd"));
+			cb_start_clientd = new JCheckBox();
+
 		}
 		
 		/*{
@@ -217,10 +223,24 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 			addListener(tf_freeInput);
 		}*/
 		{
-			btn_help = new JButton("", Globals.createImageIcon("images/help.gif", ""));
+			
+			btn_copy_selected_clients = new JButton(configed.getResourceValue("SSHConnection.ParameterDialog.deploy-clientagent.btn_copy_selected_clients"));
+			// btn_copy_selected_clients.setToolTipText( configed.getResourceValue("SSHConnection.buttonHelp") 	);
+			// btn_copy_selected_clients.setText(configed.getResourceValue("SSHConnection.buttonHelp"));
+			// buttonPanel.add(btn_copy_selected_clients);
+			btn_copy_selected_clients.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent e)
+				{
+					doCopySelectedClients();
+				}
+			});
+
+
+			btn_help = new JButton("", Globals.createImageIcon("images/help-about.png", ""));
 			btn_help.setToolTipText( configed.getResourceValue("SSHConnection.buttonHelp") 	);
 			btn_help.setText(configed.getResourceValue("SSHConnection.buttonHelp"));
-			buttonPanel.add(btn_help);
+			//buttonPanel.add(btn_help);
 			btn_help.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
@@ -232,6 +252,7 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 			btn_execute = new JButton();
 			buttonPanel.add(btn_execute);
 			btn_execute.setText(configed.getResourceValue("SSHConnection.buttonExec"));
+			btn_execute.setIcon(Globals.createImageIcon("images/execute16_blue.png", ""));
 			if (!(Globals.isGlobalReadOnly()))
 				btn_execute.addActionListener(new ActionListener()
 				{
@@ -245,6 +266,7 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 			btn_close = new JButton();
 			buttonPanel.add(btn_close);
 			btn_close.setText(configed.getResourceValue("SSHConnection.buttonClose"));
+			btn_close.setIcon(Globals.createImageIcon("images/cancelbluelight16.png", ""));
 			btn_close.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
@@ -258,17 +280,7 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 			updateCommand();
 		}
 
-		String[] clients_list = main.getSelectedClients();
-		if (clients_list.length > 0)
-		{
-			StringBuffer clients = new StringBuffer();
-			for (String c :clients_list)
-			{
-				clients.append(c);
-				clients.append(" ");
-			}
-			tf_client.setText(clients.toString());
-		}
+		doCopySelectedClients();
 
 		changeClient();
 		changeUser();
@@ -328,6 +340,7 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 		tf_passw.setEnabled(value);
 	}
 
+
 	// /* This method gets called when button 2 is pressed */
 	public void cancel()
 	{
@@ -344,9 +357,10 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 	/* This method is called when button 1 is pressed */
 	public void doAction1()
 	{
+		logging.info(this, "doAction1 deploy-clientagent ");
+		commandDeployClientAgent.start_clientd(cb_start_clientd.isSelected());
 		try
 		{
-			logging.info(this, "doAction1 deploy-clientagent ");
 			SSHConnectExec ssh = new SSHConnectExec((SSHCommand)commandDeployClientAgent);
 		}
 		catch (Exception e)
@@ -356,6 +370,20 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 		}
 	}
 
+	public void doCopySelectedClients()
+	{
+		String[] clients_list = main.getSelectedClients();
+		if (clients_list.length > 0)
+		{
+			StringBuffer clients = new StringBuffer();
+			for (String c :clients_list)
+			{
+				clients.append(c);
+				clients.append(" ");
+			}
+			tf_client.setText(clients.toString());
+		}
+	}
 	public void doActionHelp()
 	{
 		SSHConnectionExecDialog dia = commandDeployClientAgent.startHelpDialog();
@@ -365,9 +393,9 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 
 	private void initLayout()
 	{
-		int pref = GroupLayout.PREFERRED_SIZE;
-		int max = Short.MAX_VALUE;
+		int PREF = GroupLayout.PREFERRED_SIZE;
 		GroupLayout.Alignment leading = GroupLayout.Alignment.LEADING;
+		GroupLayout.Alignment center = GroupLayout.Alignment.CENTER;
 		GroupLayout winAuthPanelLayout = new GroupLayout((JComponent)winAuthPanel);
 		winAuthPanel.setLayout(winAuthPanelLayout);
 
@@ -391,11 +419,11 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 					.addGap(Globals.gapSize)
 					.addGroup( winAuthPanelLayout.createParallelGroup(leading)
 						.addGap(Globals.gapSize)
-						.addComponent(tf_user, pref, pref, max)
+						.addComponent(tf_user, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
 						.addGap(Globals.gapSize)
 						.addGroup( winAuthPanelLayout.createParallelGroup(leading)
 							.addGap(Globals.gapSize)
-							.addComponent(tf_passw, pref, pref, max)
+							.addComponent(tf_passw, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
 							.addGap(Globals.gapSize)
 							// .addComponent(btn_showPassw,pref,pref,pref)
 							// .addGap(Globals.gapSize)
@@ -407,29 +435,29 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 			)
 		);
 		winAuthPanelLayout.setVerticalGroup(winAuthPanelLayout.createSequentialGroup()
-			.addGroup( winAuthPanelLayout.createParallelGroup(leading)
+			.addGroup( winAuthPanelLayout.createParallelGroup(center)
 				.addGroup(winAuthPanelLayout.createSequentialGroup()
 					.addGap(Globals.gapSize)
-					.addGroup( winAuthPanelLayout.createParallelGroup(leading)
+					.addGroup( winAuthPanelLayout.createParallelGroup(center)
 						.addGap(Globals.gapSize)
 						.addGroup( winAuthPanelLayout.createSequentialGroup()
 							.addGap(Globals.minGapSize)
-							.addComponent(lbl_user)
+							.addComponent(lbl_user, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
 						)
 						.addGap(Globals.gapSize)
-						.addComponent(tf_user) 
+						.addComponent(tf_user, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
 					)
 					.addGap(Globals.gapSize)
-					.addGroup( winAuthPanelLayout.createParallelGroup(leading)
+					.addGroup( winAuthPanelLayout.createParallelGroup(center)
 						.addGap(Globals.gapSize)
 						.addGroup( winAuthPanelLayout.createSequentialGroup()
 							.addGap(Globals.minGapSize)
-							.addComponent(lbl_passw)
+							.addComponent(lbl_passw, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
 						)
 						.addGap(Globals.gapSize)
-						.addComponent(tf_passw,pref,pref, pref)
+						.addComponent(tf_passw,Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
 						.addGap(Globals.gapSize)
-						// .addComponent(btn_showPassw,pref, pref,pref)
+						// .addComponent(btn_showPassw,PREF, PREF,PREF)
 						// .addGap(Globals.gapSize)
 					)
 					.addGap(Globals.gapSize)
@@ -437,65 +465,74 @@ public class SSHDeployClientAgentParameterDialog extends FGeneralDialog
 			)
 		);
 
-		GroupLayout inputPanelLayout = new GroupLayout((JComponent)inputPanel);
+		GroupLayout inputPanelLayout = new GroupLayout(inputPanel);
 		inputPanel.setLayout(inputPanelLayout);
 		inputPanelLayout.setHorizontalGroup(inputPanelLayout.createSequentialGroup()
+			.addGap(Globals.gapSize)
 			.addGroup(inputPanelLayout.createParallelGroup()
 				.addGroup(inputPanelLayout.createSequentialGroup()
-					.addGroup(inputPanelLayout.createParallelGroup()
-						.addGap(Globals.minGapSize)
-						.addComponent(lbl_client,pref, pref, pref)
-					)
+					.addComponent(lbl_client, PREF, PREF, PREF)
 					.addGap(Globals.gapSize)
-					.addGroup(inputPanelLayout.createParallelGroup()
-						.addComponent(tf_client,pref, pref, max)
-					)
+					.addComponent(tf_client, PREF, PREF, Short.MAX_VALUE)
 				)
 				.addGap(Globals.gapSize)
 				.addGroup(inputPanelLayout.createSequentialGroup()
-					.addComponent(lbl_userdata,pref,pref,pref)
+					.addComponent(lbl_userdata,PREF,PREF,PREF)
 				)
-				.addGap(Globals.gapSize)
-				.addComponent(winAuthPanel, pref, pref, max)
-				.addGap(Globals.gapSize)
+				.addGroup(inputPanelLayout.createSequentialGroup()
+					.addComponent(btn_copy_selected_clients,PREF, PREF, PREF)
+				)
+				.addComponent(winAuthPanel, PREF, PREF, Short.MAX_VALUE)
+
 				.addGroup(inputPanelLayout.createSequentialGroup()
 					.addGroup(inputPanelLayout.createParallelGroup()
-						.addComponent(lbl_verbosity,pref, pref, max)
+						.addComponent(lbl_verbosity, PREF, PREF, PREF)
+						.addComponent(lbl_start_clientd, PREF, PREF, PREF)
+				
 					)
 					.addGap(Globals.gapSize)
 					.addGroup(inputPanelLayout.createParallelGroup()
-						.addComponent(cb_verbosity,pref, pref, pref)
+						.addComponent(cb_verbosity, Globals.iconWidth, Globals.iconWidth, Globals.iconWidth) 
+						.addComponent(cb_start_clientd, Globals.iconWidth, Globals.iconWidth, Globals.iconWidth) 
 					)
+					// .addGap(Globals.gapSize)
 				)
+				// .addGap(Globals.gapSize)
+				// .addGroup(inputPanelLayout.createSequentialGroup()
+					// .addGap(Globals.gapSize)
+				// )
 			)
-			.addContainerGap()
 		);
 	
 		inputPanelLayout.setVerticalGroup(inputPanelLayout.createSequentialGroup()
 			.addGap(Globals.gapSize)
-			.addGroup(inputPanelLayout.createParallelGroup(leading)
-				.addGroup(inputPanelLayout.createSequentialGroup()
-					.addGap(Globals.minGapSize)
-					.addComponent(lbl_client, pref, pref, pref)
-				)
-				.addGap(Globals.gapSize)
-				.addComponent(tf_client, leading, pref, pref, pref)
+			.addGroup(inputPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+				// .addGap(Globals.minGapSize)
+				.addComponent(lbl_client, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
+				.addComponent(tf_client, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
+				// .addGap(GroupLayout.PREFERRED_SIZE)
 			)
 			.addGap(Globals.gapSize)
+			.addGroup(inputPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+				.addComponent(btn_copy_selected_clients, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
+			)
+			.addGap(Globals.gapSize * 2)
 			.addGroup(inputPanelLayout.createParallelGroup(leading)
-				.addComponent(lbl_userdata,pref,pref,pref)
+				.addComponent(lbl_userdata,Globals.buttonHeight,Globals.buttonHeight,Globals.buttonHeight)
 			)
 			.addGap(Globals.gapSize)
-			.addComponent(winAuthPanel, pref, pref, pref)
-			.addGap(Globals.gapSize)
-			.addGroup(inputPanelLayout.createParallelGroup(leading)
-				.addGroup(inputPanelLayout.createSequentialGroup()
-					.addGap(Globals.minGapSize)
-			 		.addComponent(lbl_verbosity, pref, pref, pref)
-			 	)
-			 	.addGap(Globals.gapSize)
-			 	.addComponent(cb_verbosity, leading, pref, pref, pref)
+			.addComponent(winAuthPanel, PREF, PREF, PREF)
+			.addGap(Globals.gapSize * 2)
+			.addGroup(inputPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+				.addComponent(lbl_verbosity, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
+				.addComponent(cb_verbosity, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
 			)
+			.addGap(Globals.gapSize)
+			.addGroup(inputPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+				.addComponent(lbl_start_clientd, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
+				.addComponent(cb_start_clientd, Globals.buttonHeight, Globals.buttonHeight, Globals.buttonHeight)
+			)
+			.addGap(Globals.gapSize)
 		);
 	}
 }

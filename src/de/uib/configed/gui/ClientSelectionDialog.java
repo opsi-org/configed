@@ -77,6 +77,27 @@ public class ClientSelectionDialog extends FGeneralDialog
 		complexElements = new LinkedList<ComplexGroup>();
 		init();
 		pack();
+		
+		addComponentListener( new ComponentAdapter(){
+			@Override
+			public void componentResized( ComponentEvent e )
+			{
+				logging.info(this, "ClientSelectionDialog resized");
+				//move it up and down for fixing the combobox popup vanishing
+				java.awt.Component c = e.getComponent();
+				java.awt.Point point = c.getLocation();
+				java.awt.Point savePoint = new java.awt.Point( point );
+				point.setLocation( point.getX(), point.getY() + 1.0 );
+				c.setLocation( point );
+				c.revalidate();
+				c.repaint();
+				c.setLocation(savePoint);
+				c.revalidate();
+				c.repaint();
+			}
+		});
+				
+				
 	}
 
 	public void setReloadRequested()
@@ -115,7 +136,7 @@ public class ClientSelectionDialog extends FGeneralDialog
 		}
 		catch( Exception exc )
 		{
-			exc.printStackTrace();
+			logging.logTrace(exc);
 			logging.error( "Could not load search!" );
 		}
 	}
@@ -319,6 +340,8 @@ public class ClientSelectionDialog extends FGeneralDialog
 
 		newElementBox = new JComboBox( new String[] {configed.getResourceValue("ClientSelectionDialog.newElementsBox")} );
 		newElementBox.setFont(Globals.defaultFont);
+		//newElementBox.setLightWeightPopupEnabled(false);
+		newElementBox.setMaximumRowCount(Globals.comboBoxRowCount);
 		newElementBox.addItem( configed.getResourceValue("ClientSelectionDialog.hostName") );
 		newElementBox.addItem( configed.getResourceValue("ClientSelectionDialog.softwareName") );
 		newElementBox.addItem( configed.getResourceValue("ClientSelectionDialog.swauditName") );
@@ -327,11 +350,12 @@ public class ClientSelectionDialog extends FGeneralDialog
 		for( String hardware: hardwareList )
 			newElementBox.addItem( hardware );
 
-		newElementBox.setMaximumSize( new Dimension( newElementBox.getPreferredSize().width, newElementBox.getPreferredSize().height ) );
+		//newElementBox.setMaximumSize( new Dimension( newElementBox.getPreferredSize().width, newElementBox.getPreferredSize().height ) );
+		
 		newElementBox.addActionListener( new AddElementListener() );
 		//vMainGroup.addGap(2 * Globals.vGapSize);
-		vMainGroup.addComponent( newElementBox );
-		hMainGroup.addComponent( newElementBox );
+		vMainGroup.addComponent( newElementBox, Globals.lineHeight, Globals.lineHeight, Globals.lineHeight );
+		hMainGroup.addComponent( newElementBox, Globals.buttonWidth, Globals.buttonWidth, 2* Globals.buttonWidth);
 		contentPane.add( newElementBox );
 
 		//for( String name: manager.getSavedSearchesNames() )
@@ -1139,6 +1163,8 @@ public class ClientSelectionDialog extends FGeneralDialog
 			contentPane.repaint();
 			newElementBox.setSelectedIndex(0);
 			complexElements.getLast().connectionType.setVisible(false);
+		
+			
 		}
 	}
 

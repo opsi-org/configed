@@ -49,7 +49,8 @@ public class OpsiserviceRawDataPersistenceController extends OpsiserviceNOMPersi
 	@Override
 	protected void initMembers()
 	{
-		dataStub = new DataStubRawData(this);
+		if (dataStub == null)
+			dataStub = new DataStubRawData(this);
 	}
 	
 	

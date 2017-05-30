@@ -113,4 +113,9 @@ public  class AdditionalconfigurationUpdateCollection extends UpdateCollection
 		masterConfig = b;
 	}
 	
+	public boolean isMasterConfig()
+	{
+		return masterConfig;
+	}
+	
 }

@@ -35,8 +35,19 @@ public class PanelHostConfig extends JPanel
 	protected EditMapPanelGrouped editMapPanel;
 	protected JLabel label;
 	
+	protected boolean keylistExtendible = true; 
+	protected boolean entryRemovable = true;
+	protected boolean reloadable = true;
+	
+	//static Integer classcounter = 0;
+	
 	public PanelHostConfig()
 	{
+		/*
+		classcounter++;
+		if (classcounter > 1)
+			System.exit(0);
+		*/
 		buildPanel();
 	}
 	
@@ -84,10 +95,12 @@ public class PanelHostConfig extends JPanel
 		// putUsersToPropertyclassesTreeMap();
 		de.uib.opsidatamodel.PersistenceControllerFactory.getPersistenceController().checkConfiguration();
 		putUsersToPropertyclassesTreeMap();
+		
+		
 
 		editMapPanel = new EditMapPanelGroupedForHostConfigs(
 			new de.uib.configed.gui.helper.PropertiesTableCellRenderer(), 
-			true, true, true,
+			keylistExtendible, entryRemovable, reloadable,
 			//serverEditing, serverEditing, true,
 			//de.uib.opsidatamodel.PersistenceControllerFactory.getPersistenceController().PROPERTYCLASSES,
 			new AbstractEditMapPanel.Actor()
@@ -104,17 +117,6 @@ public class PanelHostConfig extends JPanel
 			}
 		);
 		
-		/*editMapPanel = new EditMapPanelX(new de.uib.configed.gui.helper.PropertiesTableCellRenderer(), true, true, true)
-			{
-				@Override
-				protected void reload()
-				{
-					logging.debug(this, "reload");
-					super.reload();
-					reloadHostConfig();
-				}
-			};
-		*/
 		
 		/*
 		JPanel header =new JPanel();
@@ -161,6 +163,7 @@ public class PanelHostConfig extends JPanel
 	
 	
 	
+	
 	public void initEditing(
 		String labeltext,
 		Map configVisualMap,
@@ -171,15 +174,38 @@ public class PanelHostConfig extends JPanel
 		TreeMap<String, String> classesMap
 		)
 	{
-		
+		initEditing(
+		labeltext,
+		configVisualMap,
+		configOptions,
+		collectionConfigStored,
+		configurationUpdateCollection,
+		optionsEditable,
+		classesMap,
+		null
+		);
+	}
+	
+	public void initEditing(
+		String labeltext,
+		Map configVisualMap,
+		Map<String,  de.uib.utilities.table.ListCellOptions> configOptions,
+		Collection collectionConfigStored,
+		AdditionalconfigurationUpdateCollection configurationUpdateCollection,
+		boolean optionsEditable,
+		TreeMap<String, String> classesMap,
+		EditMapPanelX.PropertyHandlerType propertyHandlerType
+		)
+	{
 		label.setText(labeltext);
 		
 		//configed.getResourceValue("MainFrame.jLabel_Config")  + ":   " + hostId);
 		
 		
-		logging.debug(this, "initEditing, " 
-			+ " configVisualMap  " +  (configVisualMap)
-			+ " configOptions  " + (configOptions)
+		logging.info(this, "initEditing " 
+		//	+ " configVisualMap  " +  (configVisualMap)
+		//	+ " configOptions  " + (configOptions)
+			+ " optionsEditable "  + optionsEditable 
 			);
 		editMapPanel.setClasses( classesMap );
 		editMapPanel.setEditableMap(
@@ -191,7 +217,8 @@ public class PanelHostConfig extends JPanel
 		
 		editMapPanel.setLabel(labeltext);
 		
-		editMapPanel.setOptionsEditable(optionsEditable);
+		editMapPanel.setOptionsEditable( optionsEditable );
+		((EditMapPanelGrouped)editMapPanel).setPropertyHandlerType( propertyHandlerType ); // if null then defaultPropertyHandler is set
 		
 	}
 

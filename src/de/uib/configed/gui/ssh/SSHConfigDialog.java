@@ -1,7 +1,7 @@
 package de.uib.configed.gui.ssh;
 
 import de.uib.opsicommand.sshcommand.*;
-// import  de.uib.opsidatamodel.*;
+import  de.uib.opsidatamodel.*;
 import de.uib.configed.*;
 import de.uib.configed.gui.*;
 import de.uib.utilities.logging.*;
@@ -45,9 +45,9 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 	private JRadioButton rb_passw;
 	private JRadioButton rb_keyfile;
 	
-	private LinkedList<String> depots;
+	//private java.util.Set<String> depots;
 	// private JTextField tf_host;
-	private static JComboBox cb_host;
+	private static JComboBox<String> cb_host;
 	private static JTextField tf_keyfile;
 	private static JPasswordField tf_passphrase;
 	private static JTextField tf_user;
@@ -56,19 +56,19 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 	private static boolean cb_useDefault_state;
 	private static boolean cb_useOuputColor_state;
 	private static boolean cb_execInBackground_state;
-	private Vector<String> localDepots = null;
+	// private Vector<String> localDepots = null;
 	private MainFrame main;
 	private ConfigedMain configedMain;
 	private static SSHConfigDialog instance ;
-	private static SSHConnect connection = null;
-	private SSHConfigDialog(Frame owner, ConfigedMain cmain, Vector<String> lDepots)
+	private static SSHConnectExec connection = null;
+		
+
+	private SSHConfigDialog(Frame owner, ConfigedMain cmain)
 	{
 		super(null,configed.getResourceValue("MainFrame.jMenuSSHConfig"), false);
 		main = (MainFrame) owner;
 		configedMain = cmain;
-		if (lDepots != null)
-			localDepots = lDepots;
-		connection = new SSHConnect(configedMain);
+		connection = new SSHConnectExec(configedMain);
 		this.centerOn(main);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		init();
@@ -84,27 +84,15 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 		}
 	}
 
-	private SSHConfigDialog(Frame owner, ConfigedMain cmain)
-	{
-		this(owner, cmain, null);
-	}
-
 	public static SSHConfigDialog getInstance(Frame fr, ConfigedMain cmain)
 	{
 		if (instance == null) 
-			instance = new SSHConfigDialog(fr, cmain, null);
+			instance = new SSHConfigDialog(fr, cmain);
 		instance.setVisible(true);
 		checkComponents();
 		return instance;
 	}
-	public static SSHConfigDialog getInstance(Frame fr, ConfigedMain cmain, Vector<String> lDepots)
-	{
-		if (instance == null) 
-			instance = new SSHConfigDialog(fr, cmain, lDepots);
-		instance.setVisible(true);
-		checkComponents();
-		return instance;
-	}
+	
 	private void checkComponentStates()
 	{
 		boolean state = compareStates();
@@ -193,7 +181,7 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 				} catch (Exception e)
 				{
 					logging.warning(this, "Error " + e);
-					e.printStackTrace();
+					logging.logTrace(e);
 				}
 			}
 
@@ -247,23 +235,25 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 		{
 			lbl_host = new JLabel();
 			lbl_host.setText(configed.getResourceValue("SSHConnection.Config.jLabelHost"));
-			if ((localDepots != null) & (localDepots.size() > 0))
-				cb_host = new JComboBox(localDepots);
-			else 
-			{
-				cb_host = new JComboBox();
-				depots = configedMain.getPersistenceController().getHostInfoCollections().getDepotNamesList();
-				for (String depot : depots)
-					if(((DefaultComboBoxModel)cb_host.getModel()).getIndexOf(depot) == -1 ) 
-						cb_host.addItem(depot);
-			}
-			cb_host.setEditable(true);
-		
+			
+			cb_host = new JComboBox<String>();
 			String host = connection.getConnectedHost();
 			if (host == null) host = configedMain.HOST;
-			logging.debug(this, "init cb_host.getSelectedItem() " + cb_host.getSelectedItem());
+			
+			cb_host.addItem(host);
+				
+			PersistenceController persist = PersistenceControllerFactory.getPersistenceController();
+			Set<String> depots = persist.getDepotPropertiesForPermittedDepots().keySet();
+			depots.remove(host); //remove login host name if identical with depot fqdn
+			for (String depot : depots)
+			{
+				cb_host.addItem( depot );
+			}
+			// cb_host.setEditable(true);
+		
 			logging.debug(this, "init host " + host);
 			cb_host.setSelectedItem(host);
+			
 			cb_host.addItemListener(new ItemListener()
 			{
 				@Override
@@ -335,14 +325,18 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 				"images/cancel-32.png", "images/cancel_over-32.png", " ", true);
 
 			buttonPanel.add(btn_save);
+			logging.info(this, "actionlistener for button1 " + Globals.isGlobalReadOnly() );
 			if (!(Globals.isGlobalReadOnly()))
+			{
 				btn_save.addActionListener(new ActionListener()
 				{
 					public void actionPerformed(ActionEvent e)
 					{
+						logging.debug(this, "actionPerformed on button1");
 						doAction1();
 					}
 				});
+			}
 		}
 			{
 			btn_openChooser = new IconButton( de.uib.configed.configed.getResourceValue("MainFrame.iconOpenFileChooser"),
@@ -453,7 +447,7 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 					connection.useKeyfile(true, tf_keyfile.getText(), new String(tf_passphrase.getPassword()));
 				}
 				connection.useKeyfile(true, tf_keyfile.getText());
-				connection.setUserData(cb_host.getSelectedItem().toString(), tf_user.getText(), new String(tf_passw.getPassword()), tf_port.getText() );
+				connection.setUserData((String) cb_host.getSelectedItem(), tf_user.getText(), new String(tf_passw.getPassword()), tf_port.getText() );
 			}
 			cb_useOuputColor = new JCheckBox();
 			cb_useOuputColor.setText(configed.getResourceValue("SSHConnection.Config.coloredOutput"));
@@ -617,9 +611,11 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 	/* This method is called when button 1 is pressed */
 	public void doAction1()
 	{
+		logging.info(this, "doAction1  " );
 		
 		if (cb_useDefault.isSelected() )
 		{
+			logging.info(this, "doAction1  cb_useDefault.isSelected true");
 			connection.setUserData(null, null, null, null);
 			cb_host.setSelectedItem(connection.getConnectedHost());
 			tf_user.setText(connection.getConnectedUser());
@@ -628,15 +624,18 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 		}
 		else 
 		{
+			logging.info(this, "doAction1  cb_useDefault.isSelected false");
 			String host = (String) cb_host.getSelectedItem();
-			if(((DefaultComboBoxModel)cb_host.getModel()).getIndexOf(host) == -1 )
-				cb_host.addItem(host);
+			logging.info(this, "doAction1 host " + host);
+			// if(((DefaultComboBoxModel)cb_host.getModel()).getIndexOf(host) == -1 )
+			// 	cb_host.addItem(host);
 
 			connection.setUserData(host, tf_user.getText(), new String(tf_passw.getPassword()), tf_port.getText() );
 		}
 		connection.useKeyfile(false);
 		if (cb_useKeyfile.isSelected())
 		{
+			logging.info(this, "doAction1  cb_useKeyfile.isSelected true");
 			logging.info(this, "set keyfile true keyfile " + tf_keyfile.getText());
 			connection.useKeyfile(true, tf_keyfile.getText(), new String(tf_passphrase.getPassword()));
 			tf_passw.setText("");
@@ -644,7 +643,8 @@ public class SSHConfigDialog extends /*javax.swing.JDialog */ FGeneralDialog
 		}
 		SSHCommandFactory factory = SSHCommandFactory.getInstance(configedMain);
 
-		factory.testConnection(tf_user.getText(), (String) cb_host.getSelectedItem()) ;
+		factory.testConnection(connection) ;
+		// factory.testConnection(tf_user.getText(), (String) cb_host.getSelectedItem()) ;
 		factory.ssh_colored_output = cb_useOuputColor.isSelected();
 		factory.ssh_always_exec_in_background = cb_execInBackground.isSelected();
 		cb_useDefault_state = cb_useDefault.isSelected();

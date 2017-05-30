@@ -51,6 +51,7 @@ public class PanelDriverUpload extends JPanel
 	JComboBox  comboChooseDepot;
 	JComboBox  comboChooseWinProduct;
 	JButton btnShowDrivers;
+	JButton btnCreateDrivers;
 	
 	JLabel label_driverToIntegrate;
 	PanelMountShare panelMountShare;
@@ -66,25 +67,6 @@ public class PanelDriverUpload extends JPanel
 	
 	JLabel label_uploading;
 	ImagePanel waitingImage;
-	
-	
-	class ImagePanel extends JPanel {
-		
-		Image image;
-		
-		public ImagePanel() {
-		image = de.uib.configed.Globals.createImage("images/waitingcircle.gif");
-		//Toolkit.getDefaultToolkit().createImage("e:/java/spin.gif");
-		}
-		
-		@Override
-		public void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			if (image != null) {
-					g.drawImage(image, 0, 0, this);
-			}
-		}
-	}
 	
 	
 	class RadioButtonIntegrationType extends JRadioButton
@@ -155,13 +137,10 @@ public class PanelDriverUpload extends JPanel
 	JLabel label_topic;
 	int wLeftText;
 		
-	
-	
 	PersistenceController persist;
 	ConfigedMain main;
 	String server;
 	JFrame rootFrame;
-	
 
 
 	public PanelDriverUpload(ConfigedMain main, PersistenceController persist, JFrame root)
@@ -204,7 +183,8 @@ public class PanelDriverUpload extends JPanel
 
 		
 		label_uploading = new JLabel("uploading");
-		waitingImage = new ImagePanel();
+		//waitingImage = new ImagePanel(de.uib.configed.Globals.createImage("images/waitingcircle.gif"));
+		//waitingImage.setVisible(true);
 		initComponents();
 		
 		logging.info(this, "depotProductDirectory " + depotProductDirectory);
@@ -353,16 +333,41 @@ public class PanelDriverUpload extends JPanel
 		);
 		
 		JLabel label_showDrivers = new JLabel(configed.getResourceValue("PanelDriverUpload.labelShowDrivers"));
-		btnShowDrivers = new JButton("", de.uib.configed.Globals.createImageIcon("images/show.png", "" ));
+		btnShowDrivers = new JButton("", de.uib.configed.Globals.createImageIcon("images/show-menu.png", "" ));
 		btnShowDrivers.setToolTipText(configed.getResourceValue("PanelDriverUpload.btnShowDrivers.tooltip"));
 		btnShowDrivers.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
 				new SSHConnectExec(main, 
+					//  Empty_Command(String id, String c, String mt, boolean ns)
 					((SSHCommand)new Empty_Command(
-						"/var/lib/opsi/depot/" + comboChooseWinProduct.getSelectedItem() + "/show_drivers.py " + fieldClientname.getText())
+						"show_drivers.py", // id not needed
+						"/var/lib/opsi/depot/" + comboChooseWinProduct.getSelectedItem() + "/show_drivers.py " + fieldClientname.getText(),
+						"show_drivers.py", // menuText - not needed
+						false //needSudo?
+						)
 					) 
+				);
+			}
+		});
+
+		JLabel label_createDrivers = new JLabel(configed.getResourceValue("PanelDriverUpload.labelCreateDriverLinks"));
+		btnCreateDrivers = new JButton("", de.uib.configed.Globals.createImageIcon("images/run-build-file.png", "" ));
+		btnCreateDrivers.setToolTipText(configed.getResourceValue("PanelDriverUpload.btnCreateDrivers.tooltip"));
+		btnCreateDrivers.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				new SSHConnectExec(main, 
+					//  Empty_Command(String id, String c, String mt, boolean ns)
+					((SSHCommand)new Empty_Command(
+						"create_driver_links.py",// id not needed
+						"/var/lib/opsi/depot/" + comboChooseWinProduct.getSelectedItem() + "/create_driver_links.py " ,
+						"create_driver_links.py", // menutext - not needed
+						true // need sudo ?
+						)
+					)
 				);
 			}
 		});
@@ -503,6 +508,7 @@ public class PanelDriverUpload extends JPanel
 		buttonUploadDrivers = new JButton("",  de.uib.configed.Globals.createImageIcon("images/upload2product.png", "" ));
 		buttonUploadDrivers .setEnabled(false);
 		buttonUploadDrivers.setSelectedIcon( de.uib.configed.Globals.createImageIcon("images/upload2product.png", "" ) );
+		//buttonUploadDrivers.setDisabledIcon( de.uib.configed.Globals.createImageIcon("images/waitingcircle.gif", "") );
 		
 		
 		buttonUploadDrivers.setEnabled(false);
@@ -516,9 +522,7 @@ public class PanelDriverUpload extends JPanel
 					final Color saveColor = buttonUploadDrivers.getBackground();
 					//final Icon saveIcon = buttonUploadDrivers.getIcon();
 					buttonUploadDrivers.setBackground(de.uib.configed.Globals.failedBackColor);
-					
 					execute();
-					
 					buttonUploadDrivers.setBackground(saveColor);
 				}
 			}
@@ -555,6 +559,11 @@ public class PanelDriverUpload extends JPanel
 					)
 				.addGap(2*vGap, 3*vGap, 3*vGap)
 				.addGroup( layoutByAuditInfo.createParallelGroup(GroupLayout.Alignment.BASELINE) 
+					.addComponent(label_createDrivers, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
+					.addComponent(btnCreateDrivers, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
+					)
+				.addGap(2*vGap, 3*vGap, 3*vGap)
+				.addGroup( layoutByAuditInfo.createParallelGroup(GroupLayout.Alignment.BASELINE) 
 					.addComponent(label_driverToIntegrate, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
 					.addComponent(buttonCallSelectDriverFiles, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
 					.addComponent(fieldDriverPath, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
@@ -578,8 +587,9 @@ public class PanelDriverUpload extends JPanel
 				
 				.addGap(vGap, vGap*2, vGap*2)
 				.addGroup( layoutByAuditInfo.createParallelGroup(GroupLayout.Alignment.CENTER)
-					.addComponent(label_uploading, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
-					.addComponent(waitingImage,  de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
+					//.addComponent(label_uploading, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
+					.addGap(de.uib.utilities.Globals.lineHeight)
+					//.addComponent(waitingImage,  de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight, de.uib.utilities.Globals.lineHeight)
 				)
 				.addGap(vGap, vGap*2, vGap*2)
 			)
@@ -614,6 +624,11 @@ public class PanelDriverUpload extends JPanel
 							.addComponent(label_showDrivers, de.uib.configed.Globals.buttonWidth,  de.uib.configed.Globals.buttonWidth*2, Short.MAX_VALUE)
 							.addGap(hGap, hGap, hGap)
 							.addComponent(btnShowDrivers, de.uib.configed.Globals.graphicButtonWidth ,  de.uib.configed.Globals.graphicButtonWidth, de.uib.configed.Globals.graphicButtonWidth)
+						)
+						.addGroup(layoutByAuditInfo.createSequentialGroup()
+							.addComponent(label_createDrivers, de.uib.configed.Globals.buttonWidth,  de.uib.configed.Globals.buttonWidth*2, Short.MAX_VALUE)
+							.addGap(hGap, hGap, hGap)
+							.addComponent(btnCreateDrivers, de.uib.configed.Globals.graphicButtonWidth ,  de.uib.configed.Globals.graphicButtonWidth, de.uib.configed.Globals.graphicButtonWidth)
 						)
 						.addGroup( layoutByAuditInfo.createSequentialGroup() 
 							.addComponent(label_driverToIntegrate, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -650,10 +665,19 @@ public class PanelDriverUpload extends JPanel
 					.addComponent(buttonUploadDrivers, de.uib.configed.Globals.graphicButtonWidth, de.uib.configed.Globals.graphicButtonWidth,  de.uib.configed.Globals.graphicButtonWidth)
 					.addGap(hFirstGap/2, hFirstGap/2, hFirstGap/2)
 				)
+				
 				.addGroup(layoutByAuditInfo.createSequentialGroup()
-					.addGap(hGap, hGap, Short.MAX_VALUE)
+				/*
+					//.addGap(hGap, hGap, Short.MAX_VALUE)
 					.addComponent(label_uploading,  GroupLayout.PREFERRED_SIZE,  GroupLayout.PREFERRED_SIZE,  GroupLayout.PREFERRED_SIZE)
-					.addComponent(waitingImage, GroupLayout.PREFERRED_SIZE,  GroupLayout.PREFERRED_SIZE,  GroupLayout.PREFERRED_SIZE)
+					.addGap(hFirstGap, hFirstGap, hFirstGap)
+					.addComponent(waitingImage, de.uib.configed.Globals.iconWidth,  de.uib.configed.Globals.iconWidth,  de.uib.configed.Globals.iconWidth)
+					.addGap(hFirstGap, hFirstGap, hFirstGap)
+				)
+				*/
+					.addGap(hGap, hGap, Short.MAX_VALUE)
+					//.addComponent(label_uploading,  GroupLayout.PREFERRED_SIZE,  GroupLayout.PREFERRED_SIZE,  GroupLayout.PREFERRED_SIZE)
+					//.addComponent(waitingImage, de.uib.configed.Globals.iconWidth,  de.uib.configed.Globals.iconWidth,  de.uib.configed.Globals.iconWidth)
 					.addGap(hFirstGap/2, hFirstGap/2, hFirstGap/2)
 				)
 			)
@@ -692,59 +716,89 @@ public class PanelDriverUpload extends JPanel
 	
 	protected void execute()
 	{	
-		WaitCursor waitCursor = null;
+		//waitingImage.setVisible(true);
 		
-		try{
-			
-			waitCursor = new WaitCursor( rootFrame );
-			
-			logging.info(this, "copy  " + driverPath + " to " + targetPath);
-			
-			Thread.currentThread().sleep(100);
+		//	Thread.yield();
+		
+		final FLoadingWaiter waiter = new FLoadingWaiter(de.uib.configed.Globals.APPNAME,
+			configed.getResourceValue("PanelDriverUpload.execute.running"));
+		waiter.startWaiting();
+		
+		final WaitCursor waitCursor = new WaitCursor( rootFrame );
+		
+		
+		//try{
 	
-			makePath(targetPath, true);
-			
-			stateServerPath = targetPath.exists();
-			serverPathChecked.setSelected(stateServerPath);
-			if (stateServerPath)
+		//	SwingUtilities.invokeLater(new Thread(){
+		//			public void run()
+		new Thread(){
+			public void run()
 			{
-				if (driverPath.isDirectory())
-					FileUtils.copyDirectoryToDirectory(driverPath, targetPath);
-				else 
-					FileUtils.copyFileToDirectory(driverPath, targetPath);
-			}
-			else
-				logging.info(this, "execute: targetPath does not exist");
+				try
+				{
 			
-			if (stateServerPath)
-			{
-				String driverDir = "/" + 
-								SmbConnect.unixPath(SmbConnect.directoryProducts) +
-								"/" + 
-								winProduct +
-								"/" +
-								SmbConnect.unixPath(SmbConnect.DIRECTORY_DRIVERS);
-				logging.info(this, "set rights for " + driverDir);
-				persist.setRights(driverDir);
-			}
-			
-			waitCursor.stop();
-			
-			
+						
+						logging.info(this, "copy  " + driverPath + " to " + targetPath);
+						
+						//Thread.currentThread().sleep(100);
 				
-			JOptionPane.showMessageDialog( rootFrame,
-			                               "Ready", //resultMessage, 
-			                               configed.getResourceValue("CompleteWinProduct.reportTitle"),
-			                               JOptionPane.INFORMATION_MESSAGE);
+						
+						makePath(targetPath, true);
+						
+						stateServerPath = targetPath.exists();
+						serverPathChecked.setSelected(stateServerPath);
+						if (stateServerPath)
+						{
+							try{
+								if (driverPath.isDirectory())
+									FileUtils.copyDirectoryToDirectory(driverPath, targetPath);
+								else 
+									FileUtils.copyFileToDirectory(driverPath, targetPath);
+							}
+							catch(IOException iox)
+							{
+								waitCursor.stop();
+								logging.error("copy error:\n" + iox, iox);
+							}
+						}
+						else
+							logging.info(this, "execute: targetPath does not exist");
+						
+						if (stateServerPath)
+						{
+							String driverDir = "/" + 
+											SmbConnect.unixPath(SmbConnect.directoryProducts) +
+											"/" + 
+											winProduct +
+											"/" +
+											SmbConnect.unixPath(SmbConnect.DIRECTORY_DRIVERS);
+							logging.info(this, "set rights for " + driverDir);
+							persist.setRights(driverDir);
+						}
+						
+						waitCursor.stop();
+						
+						if (waiter != null)
+							waiter.setReady();
+							
+						/*
+						JOptionPane.showMessageDialog( rootFrame,
+													   "Ready", //resultMessage, 
+													   configed.getResourceValue("CompleteWinProduct.reportTitle"),
+													   JOptionPane.INFORMATION_MESSAGE);
+						*/
+						
+					
+				}
+				catch(Exception ex)
+				{
+					waitCursor.stop();
+					logging.error("error in uploading :\n" + ex, ex);
+				}
+				//waitingImage.setVisible(false);
+			}
+		}.start();
 			
-			
-			
-		}
-		catch(Exception ex)
-		{
-			waitCursor.stop();
-			logging.error("copy error:\n" + ex, ex);
-		}
 		
 		//waitCursor = null;
 	}

@@ -1007,6 +1007,9 @@ public class configed
 			UIManager.put("ProgressBar.selectionBackground", Color.red);
 			UIManager.put("ProgressBar.selectionForeground", Globals.backLightBlue);
 			 */
+			 
+		//JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+		//destroys some popups, saves others
 
 	}
 

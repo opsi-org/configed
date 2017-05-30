@@ -15,6 +15,7 @@ import de.uib.utilities.*;
 import de.uib.utilities.logging.*;
 
 import de.uib.utilities.table.*;
+import de.uib.utilities.swing.*;
 
 public abstract class AbstractEditMapPanel extends JPanel
 {
@@ -126,6 +127,62 @@ public abstract class AbstractEditMapPanel extends JPanel
 		mapTableModel.setShowOnlyValues( showOnly );
 	}
 	
+	protected void logPopupElements(JPopupMenu popup)
+	{
+		MenuElement[] popupElements = popup.getSubElements();
+		int size = popupElements.length;
+		logging.info(this, "logPopupElements " +size);
+		for (int i = 0; i < size;  i++)
+		{
+			logging.info(this, "logPopupElements " +   ((JMenuItem) popupElements[i]).getText());
+		}
+	}
+	
+	/*
+	private void removeOldPopupElements()
+	{
+		MenuElement[] popupElements = popup.getSubElements();
+		int size = popupElements.length;
+		logging.info(this, "removeOldPopupElements " +size);
+		for (int i = size-1; i >=0;  i--)
+		{
+			logging.info(this, "removeOldPopupElements " +   ((JMenuItem) popupElements[i]).getText());
+			popup.remove(i);
+		}
+	}
+	
+	public void setPopupConfiguration(LinkedList<JMenuItem>menuItems) 
+	{
+		logPopupElements();
+		//removePopupElements();
+		
+		
+		logging.info(this, "setPopupConfiguration, set menuitems " +menuItems.size() );
+		for (JMenuItem item : menuItems)
+		{
+			logging.info(this, "setPopupConfiguration, set " +  item.getText());
+			//popup.add( item );
+		}
+		
+	}
+	
+	public void setPopupConfiguration(JPopupMenu menu) 
+	{
+		logPopupElements();
+		//removePopupElements();
+		
+		
+		MenuElement[] menuElements = menu.getSubElements();
+		logging.info(this, "setPopupConfiguration, set menu " +menuElements.length); 
+		for (int i = 0; i < menuElements.length; i++)
+		{
+			logging.info(this, "setPopupConfiguration, set menu " +  ((JMenuItem) menuElements[i]).getText());
+			//popup.add( (JMenuItem) menuElements[i] );
+		}
+		
+	}
+	*/
+		
 	public void setOptionsEditable( boolean b )
 	{
 		logging.info(this, "AbstractEditMapPanel.setOptionsEditable " + b);

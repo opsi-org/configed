@@ -62,12 +62,12 @@ public abstract class PersistenceController
 	public final static String CONFIG_DEPOT_ID = "clientconfig.depot.id";
 
 	public final static String KEY_SSH_DEFAULTWINUSER = "configed.ssh.deploy-client-agent.default.user";
-	public final static String KEY_SSH_DEFAULTWINUSER_defaultvalue = "Adminuser";
+	public final static String KEY_SSH_DEFAULTWINUSER_defaultvalue = "Administrator";
 	public final static String KEY_SSH_DEFAULTWINPW = "configed.ssh.deploy-client-agent.default.password";
-	public final static String KEY_SSH_DEFAULTWINPW_defaultvalue = "nt123";
+	public final static String KEY_SSH_DEFAULTWINPW_defaultvalue = "";
 
-	public final static String PRODUCT_DIRECTORY = "configed.product_directory.default";
-	public static String PRODUCT_DIRECTORY_defaultvalue = "/home/opsiproducts";
+	public final static String WORKBENCH = "configed.workbench.default";
+	public static String WORKBENCH_defaultvalue = "/home/opsiproducts/";
 
 
 	public final static String CONFIG_CLIENTD_EVENT_GUISTARTUP = "opsiclientd.event_gui_startup.active";
@@ -110,24 +110,36 @@ public abstract class PersistenceController
 	// public static boolean KEY_USER_SSH_REGISTER_defaultvalue = false;
 
 	public final static String KEY_SSH_MENU_ACTIVE = "ssh.menu_serverconsole.active";
-	public final static String KEY_SSH_MENU_ACTIVE_description =  "activates the whole menu server-console" ;
+	public final static String KEY_SSH_MENU_ACTIVE_description = configed.getResourceValue("PersistenceController.SSH_MENU_ACTIVE");
+		//"activates the whole menu server-console" ;
 	public static boolean KEY_SSH_MENU_ACTIVE_defaultvalue = true;
 
 	public final static String KEY_SSH_CONFIG_ACTIVE = "ssh.serverconfiguration.active";
-	public final static String KEY_SSH_CONFIG_ACTIVE_description = "activates menu to configure ssh connection" ;
-	public static boolean KEY_SSH_CONFIG_ACTIVE_defaultvalue = false;
+	public final static String KEY_SSH_CONFIG_ACTIVE_description = configed.getResourceValue("PersistenceController.SSH_CONFIG_ACTIVE");
+		//"activates menu to configure ssh connection" ;
+	public static boolean KEY_SSH_CONFIG_ACTIVE_defaultvalue = true;
 
 	public final static String KEY_SSH_CONTROL_ACTIVE = "ssh.commandmanagement.active";
-	public final static String KEY_SSH_CONTROL_ACTIVE_description = "activate the menu of command management";
+	public final static String KEY_SSH_CONTROL_ACTIVE_description = configed.getResourceValue("PersistenceController.SSH_CONTROL_ACTIVE");
+		//"activate the menu of command management";
 	public static boolean KEY_SSH_CONTROL_ACTIVE_defaultvalue = false;
 	
 	public final static String KEY_SSH_SHELL_ACTIVE = "ssh.terminal.active";
-	public final static String KEY_SSH_SHELL_ACTIVE_description = "activates terminal to ssh server";
-	public static boolean KEY_SSH_SHELL_ACTIVE_defaultvalue = true;
+	public final static String KEY_SSH_SHELL_ACTIVE_description  = configed.getResourceValue("PersistenceController.SSH_SHELL_ACTIVE");
+	//= "activates terminal to ssh server";
+	public static boolean KEY_SSH_SHELL_ACTIVE_defaultvalue = false;
 
 	public final static String KEY_SSH_COMMANDS_ACTIVE = "ssh.commands.active";
-	public final static String KEY_SSH_COMMANDS_ACTIVE_description = "activate menus of all executable commands in menu server-console";
+	public final static String KEY_SSH_COMMANDS_ACTIVE_description = configed.getResourceValue("PersistenceController.SSH_COMMANDS_ACTIVE");
+	//activate menus of all executable commands in menu server-console";
 	public static boolean KEY_SSH_COMMANDS_ACTIVE_defaultvalue = true;
+	
+	public final static String DEPOT_SELECTION_NODEPOTS = configed.getResourceValue("SSHConnection.command.opsipackagemanager.DEPOT_SELECTION_NODEPOTS");
+	public final static String DEPOT_SELECTION_ALL = configed.getResourceValue("SSHConnection.command.opsipackagemanager.DEPOT_SELECTION_ALL");
+	public final static String DEPOT_SELECTION_ALL_WHERE_INSTALLED = configed.getResourceValue("SSHConnection.command.opsipackagemanager.DEPOT_SELECTION_ALL_WHERE_INSTALLED");
+	
+	
+	
 	/* 
 	
 	model
@@ -190,6 +202,19 @@ public abstract class PersistenceController
 		//PROPERTYCLASSES_CLIENT.put( OpsiPermission.CONFIGKEY_STR_USER, "<html>user privileges configuration,<br />not client specific</html>");
 	}
 	
+	public static TreeMap<String, String> PROPERTY_EDITOPTIONS_CLIENT;
+	static {
+		PROPERTY_EDITOPTIONS_CLIENT = new TreeMap<String, String>();
+		
+	}
+		
+		
+	public static TreeMap<String, String> PROPERTY_EDITOPTIONS_SERVER;
+	static {
+		PROPERTY_EDITOPTIONS_SERVER = new TreeMap<String, String>();
+	
+	}
+	
 	public static Set<String> CONFIG_KEYSTARTERS_NOT_FOR_CLIENTS;
 	static{
 		CONFIG_KEYSTARTERS_NOT_FOR_CLIENTS = new HashSet<String>( PROPERTYCLASSES_SERVER.keySet() );
@@ -244,7 +269,7 @@ public abstract class PersistenceController
 	
 	//public abstract void checkReadOnly();
 	
-	
+	public abstract LinkedHashMap<String, Map<String, Object>> getDepotPropertiesForPermittedDepots();
 	
 	public boolean hasUserPrivilegesData()
 	{
@@ -457,7 +482,7 @@ public abstract class PersistenceController
 	
 	//public abstract String getPcInfo( String hostId );
 	
-	public abstract boolean existsEntry (String pcname);
+	//public abstract boolean existsEntry (String pcname);
 	
 	
 	/* software info */
@@ -536,6 +561,10 @@ public abstract class PersistenceController
 	public abstract Map<String, java.util.List<String>>  getPossibleActions(String depotId);
 	
 	public abstract Map<String, Map<String, OpsiProductInfo>> getProduct2versionInfo2infos();
+	
+	public abstract Object2Product2VersionList getDepot2LocalbootProducts();
+	
+	public abstract Object2Product2VersionList getDepot2NetbootProducts();
 	
 	//public abstract void retrieveProductGlobalInfos();
 	
@@ -694,7 +723,7 @@ public abstract class PersistenceController
 	
 	public abstract void setHostValues(Map settings);
 	
-	public abstract void setAdditionalConfiguration (String objectId, Map settings);
+	public abstract void setAdditionalConfiguration (String objectId, ConfigName2ConfigValue settings);
 	
 	public abstract void setAdditionalConfiguration (boolean determineConfigOptions);
 	
@@ -720,6 +749,7 @@ public abstract class PersistenceController
 	
 	public abstract void setDepot(String depotId);
 	
+	public abstract String getDepot();
 	
 	
 	//public abstract String getDepot();

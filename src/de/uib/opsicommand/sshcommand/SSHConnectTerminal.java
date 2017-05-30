@@ -25,6 +25,7 @@ public class SSHConnectTerminal extends SSHConnect
 	private KeyListener inputKeyListener = null;
 	private ActionListener connectionKeyListener = null;
 	private OutputStream out = null;
+	public final static String SOME_COMMAND ="/bin/bash"; //"opsi-admin --version";
 
 	public SSHConnectTerminal(ConfigedMain main, SSHConnectionTerminalDialog dialog)
 	{
@@ -63,12 +64,14 @@ public class SSHConnectTerminal extends SSHConnect
 	}
 	String currentDirectory = "";
 	boolean getCurrentDirectorySilent = false;
+	
 	class MyOutputPrinter extends PrintStream
 	{
 		SSHConnectionTerminalDialog theDialog;
+		
 		MyOutputPrinter(SSHConnectionTerminalDialog dialog, OutputStream out)
 		{
-			super(out);
+			super( out );
 			theDialog = dialog;
 		}
 		@Override
@@ -127,6 +130,7 @@ public class SSHConnectTerminal extends SSHConnect
 			} catch  (UnsupportedEncodingException ue)
 			{
 				logging.warning(" UnsupportedEncodingException " + ue);
+				logging.logTrace(ue);
 			}
 		}
 	}
@@ -191,6 +195,7 @@ public class SSHConnectTerminal extends SSHConnect
 
 			channel.connect();
 			logging.info(this, "connect " + this.user + "@" + this.host);
+			dialog.setTitle(this.user  + "@" + this.host);
 			dialog.setVisible(true);
 			dialog.setAutocompleteList(getList(getCompletionList(true, true)));
 			
@@ -201,11 +206,12 @@ public class SSHConnectTerminal extends SSHConnect
 			initKillProcessButtonFromDialog();
 
 			Thread.sleep(1000);
-			exec("bash\n");
+			exec(SOME_COMMAND + "\n");
 		}
 		catch (Exception e)
 		{
 			logging.error(this, "SSHConnectTerminal connect exception" + e );
+			logging.logTrace(e);
 		}
 	}
 	public final void exec(String text)
@@ -239,17 +245,20 @@ public class SSHConnectTerminal extends SSHConnect
 		catch (IOException ioe) 
 		{
 			logging.error(this, "SSHConnectTerminal exec ioexception " + ioe);
-			ioe.printStackTrace();
+			logging.logTrace(ioe);
 		}
 		catch (Exception e)
 		{
-			// e.printStackTrace();
 			logging.error(this, "SSHConnectTerminal exec exception ");
-			e.printStackTrace();
+			logging.logTrace(e);
 		}
+		
+		logging.info(this, " exec finished  " + text);
 	}
+	
 	private ChannelShell setStreams(ChannelShell ch) throws IOException
 	{ return setStreams(ch, false);}
+	
 	private ChannelShell setStreams(ChannelShell ch, boolean silent) throws IOException
 	{
 		ch.setInputStream(new FilterInputStream(System.in){
@@ -257,7 +266,28 @@ public class SSHConnectTerminal extends SSHConnect
 				return in.read(b, off, (len>1024?1024:len));
 			}
 		});
-		ch.setOutputStream(new MyOutputPrinter(dialog, System.out));
+		
+		PrintStream myOut = System.out;
+		
+		/* does not help; nevertheless we need a terminal from which the configed is started
+		PrintStream myOut = null;
+		
+		try
+		{
+			System.out.println("starting");
+			logging.info(this, "have we got System.out ? "  + System.out.checkError());
+			File f = File.createTempFile("configedout_", ".tmp");
+			myOut = new PrintStream(f);
+			logging.info(this, "temp file created for SSH terminal:" + f);
+		}
+		catch(Exception ex)
+		{
+			logging.info(this, "no temp file created, taking System.out");
+			myOut = System.out;
+		}
+		*/
+		
+		ch.setOutputStream(new MyOutputPrinter(dialog, myOut));
 		out = ch.getOutputStream();
 		return ch;
 	}
@@ -290,7 +320,9 @@ public class SSHConnectTerminal extends SSHConnect
 				out.write("\n".getBytes());
 			else logging.warning(this, "Pipe closed");
 		} catch (Exception e2)
-		{ e2.printStackTrace();}
+		{
+			logging.logTrace(e2); 
+		}
 	}
 
 	private void initListeners()
@@ -380,7 +412,7 @@ public class SSHConnectTerminal extends SSHConnect
 			// result = ssh.exec(new Empty_Command("compgen -c"  ), false, null, true, false);
 			result = ssh.exec(new Empty_Command(
 				// http://stackoverflow.com/questions/948008/linux-command-to-list-all-available-commands-and-aliases
-				"COMMANDS=`echo -n $PATH | xargs -d : -I {} find {} -maxdepth 1 -executable -type f -printf '%P\\n'` ; ALIASES=`alias | cut -d '=' -f 1`; echo \"$COMMANDS\"$'\\n'\"$ALIASES\" | sort -u "  ), 
+				SSHCommandFactory.getInstance().str_command_getLinuxCommands), 
 				false, null, true, false);
 			if (result == null)
 				logging.warning(this, "no commands could be found for autocompletion");

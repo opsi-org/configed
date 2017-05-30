@@ -23,25 +23,79 @@ import java.util.ArrayList.*;
 
 public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 {
-	
 	private JLabel lbl_userhost = new JLabel();
 	private JTextField tf_command;
+	private JLabel lbl_command;
 	private JCheckBox cb_privat;
 	private JPanel parameterPanel;
-	// private JButton btn_changeHelpPanelStatus;
+	private JPanel terminatingPanel;
 	public JButton btn_killProcess;
 	private JButton btn_executeCommand;
 	private final SSHConnectTerminal terminal;
 	private ArrayList<String> commandHistory = new ArrayList<String>();
 	private int historyAddIndex = 0;
 	private int historyGetIndex = 0;
-	private boolean helpPanelStatus = true;
-	private Dimension btn_dim = new Dimension(de.uib.configed.Globals.graphicButtonWidth +15,de.uib.configed.Globals.buttonHeight +3 );
-	private Dimension thissize = new Dimension(810,550);
+	private Autocomplete autoComplete;
+	private boolean passwordMode = false;
+	private Dimension btn_dim = new Dimension(de.uib.configed.Globals.graphicButtonWidth +15,de.uib.configed.Globals.buttonHeight );
+	private Dimension thissize = new Dimension(810,600);
+	
+	private class TerminatingPanel extends JPanel
+	{
+		JButton btn_close;
+		TerminatingPanel(ActionListener closeListener)
+		{
+			super();
+			//setBackground(java.awt.Color.GREEN);
+			setBackground(de.uib.configed.Globals.backLightBlue);
+			btn_close= new de.uib.configed.gui.IconButton(
+				de.uib.configed.configed.getResourceValue("SSHConnection.buttonClose") ,
+				"images/cancel.png", "images/cancel.png", "images/cancel.png",true
+			);
+			btn_close.addActionListener(closeListener);
+			
+			btn_close.setPreferredSize(btn_dim);
+			
+			GroupLayout layout = new GroupLayout(this);
+			setLayout(layout);
+			
+			layout.setVerticalGroup( layout.createSequentialGroup()
+				.addGap(de.uib.configed.Globals.vGapSize)
+				.addComponent(btn_close, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addGap(3*de.uib.configed.Globals.vGapSize)
+			);
+			
+			layout.setHorizontalGroup( layout.createSequentialGroup()
+				.addGap(de.uib.configed.Globals.gapSize, de.uib.configed.Globals.gapSize, Short.MAX_VALUE)
+				.addComponent(btn_close,de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth)
+				.addGap(de.uib.configed.Globals.gapSize)
+			);
+			
+		}
+	}
+			
+	
 	public SSHConnectionTerminalDialog(String title, final SSHConnectTerminal terminal, boolean visible) 
 	{	
 		super(title);
-		this.setVisible (visible);
+		output.setBackground(de.uib.configed.Globals.lightBlack);
+		output.addMouseListener( new MouseAdapter(){
+				@Override
+				public void mouseClicked(MouseEvent e)
+				{
+					setCLfocus();
+				}
+				
+				
+				@Override
+				public void mouseReleased(MouseEvent e)
+				{
+					setCLfocus();
+				}
+				
+				
+			}
+		);
 		this.terminal = terminal;
 		parameterPanel = new SSHCommandControlParameterMethodsPanel(this);
 		((SSHCommandControlParameterMethodsPanel)parameterPanel).setGapSize(
@@ -50,48 +104,68 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 		((SSHCommandControlParameterMethodsPanel)parameterPanel).initLayout();
 		((SSHCommandControlParameterMethodsPanel)parameterPanel).repaint();
 		((SSHCommandControlParameterMethodsPanel)parameterPanel).revalidate();
+		
+		closeListener = new DialogCloseListener(){
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				logging.debug(this, "actionPerformed " + e);
+				terminal.disconnect();
+				cancel();
+				super.actionPerformed(e);
+			}
+		};
+		
+		terminatingPanel = new TerminatingPanel(closeListener);
+		
+		btn_close.setVisible(false); //in terminating panel, we place an extra button
+		
 		initGUI();
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.centerOn(de.uib.configed.Globals.mainFrame);
 		this.setSize(this.thissize);
+		this.setMaximumSize(new Dimension(900, 700));
 		// if (terminal != null)  terminal.exec("bash\n");
-		btn_close.removeActionListener(closeListener);
-		this.closeListener = new ActionListener() {
-			public void actionPerformed(ActionEvent e)
-			{
-				terminal.disconnect();
-				cancel();
-			}
-		};
-		btn_close.addActionListener(this.closeListener);
+		//btn_close.removeActionListener(closeListener);
+		//btn_close.addActionListener(this.closeListener);
 		setComponentsEnabled_RO(! de.uib.configed.Globals.isGlobalReadOnly());
-		((Component) tf_command).requestFocusInWindow();
-		((JTextField) tf_command).requestFocus();
-		((JTextField) tf_command).setCaretPosition(((JTextField) tf_command).getText().length());
+		setCLfocus();
+		//((JTextField) tf_command).setCaretPosition(((JTextField) tf_command).getText().length());
 		logging.info(this, "SSHConnectionTerminalDialog build ");
 		this.addComponentListener(new ComponentAdapter() 
 		{
 			public void componentResized(ComponentEvent e)
 			{
+				logging.info(this, "SSHConnectionTerminalDialog  resized");
 				super.componentResized(e);
-				setOutSize();
+				//Point loc = getLocationOnScreen();
+				//loc.setLocation(loc.getX(), loc.getY() - 1); 
+				//setLocation(loc);//repairs vanishing of combobox popup on enlarging but has the ugly effect of wandering 
+				//revalidate();
+				//this.repaint();
+				//setOutSize();
+				setCLfocus();
 				// append("", tf_command); // try to set scrollpane to end of textpane and focus on tf_command
 			}
 		});
-
+		setOutSize();
 	}
+
 	public SSHConnectionTerminalDialog(String title, SSHConnectTerminal terminal) 
 	{	
 		this(title, terminal, true);
 	}
+
 	public SSHConnectionTerminalDialog(String title, boolean visible)
 	{
 		this(title, null, visible);
 	}
+
 	public SSHConnectionTerminalDialog(String title)
 	{
 		this(title, true);
 	}
+
 	private void setComponentsEnabled_RO(boolean value)
 	{
 		logging.info(this, "setComponentsEnabled_RO value " + value);
@@ -100,23 +174,66 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 		btn_killProcess.setEnabled(value);
 	}
 	
+	private void setCLfocus()
+	{
+		logging.info(this, "setCLfocus"); 
+		tf_command.setCaretPosition(tf_command.getText().length());
+		tf_command.requestFocus();
+		
+		//some thread seems to prevent setting it directly
+		new Thread(){
+			public void run()
+			{
+				int timeoutRuns = 100;
+				int counter = 0;
+				while (!tf_command.hasFocus() && counter < timeoutRuns)
+				{
+					counter++;
+					try{ Thread.sleep(100); }
+					catch(InterruptedException ex) {}
+					tf_command.requestFocus();
+					logging.info(this,"repeated requestFocus " + counter + " times");
+				}
+			}
+		}.start();
+		
+	}
+	/*private void printWindowSize()
+	{
+		logging.debug("this.getsize " + this.getSize());
+		logging.debug("this.getwidth / getHeight " + this.getWidth() + " " + this.getHeight());
+		logging.debug("output.getwidth / getHeight " + this.output.getWidth() + " " + this.output.getHeight());
+		logging.debug("jScrollPane.getwidth / getHeight " + this.jScrollPane.getWidth() + " " + this.jScrollPane.getHeight());
+	}*/
 	
 	private void setOutSize()
 	{
-		double no_output_Height = (de.uib.configed.Globals.gapSize*4) + tf_command.getHeight() + parameterPanel.getHeight() + btn_dim.getHeight();
+		// printWindowSize();
+		double no_output_Height = (de.uib.configed.Globals.gapSize*4) 
+		+ tf_command.getHeight() 
+		+ parameterPanel.getHeight() 
+		+ btn_dim.getHeight()
+		+ terminatingPanel.getHeight();
+	
 		this.thissize = this.getSize();
-		double w = this.thissize.getWidth()-(de.uib.configed.Globals.gapSize*2); 
-		double h = this.thissize.getHeight() - no_output_Height;
+		// double w = 900 - (de.uib.configed.Globals.gapSize*4); 
+		// double h = 700 - no_output_Height;
+		double w = this.getSize().getWidth() - (de.uib.configed.Globals.gapSize*4); 
+		double h = this.getSize().getHeight() - no_output_Height;
+		if (w > 1500) w = 810;
+		if (h > 1500) h = 600;
 		Dimension output_size = new Dimension( );
 		output_size.setSize( w, h);
+
 		this.output.setSize(output_size);
 		this.output.setPreferredSize(output_size);
 		this.output.setMaximumSize(output_size);
 		this.jScrollPane.setSize(output_size);
 		this.jScrollPane.setPreferredSize(output_size);
-		this.jScrollPane.setMaximumSize(output_size);
+		//this.jScrollPane.setMaximumSize(output_size);
 		this.revalidate();
-		this.repaint();
+		//this.repaint();
+		// printWindowSize();
 	}
 
 	public JTextField getInputField()
@@ -125,16 +242,19 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 			return null;
 		return tf_command;
 	}
+
 	public boolean getPrivateStatus()
 	{
 		return passwordMode;
 	}
+
 	public void setPrivate(boolean pr)
 	{
 		logging.info(this, "setPrivate " + pr);
 		if(pr) changeEchoChar('*');
 		else changeEchoChar((char)0);
 	}
+
 	public void setLastHistoryIndex()
 	{
 		if (commandHistory.size() >0)
@@ -151,6 +271,7 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 			historyGetIndex = historyAddIndex;
 		}
 	}
+
 	public String getPrevCommand_up()
 	{
 		logging.debug(this, "getPrevCommand_up historySize " + commandHistory.size() + " getIndex " + historyGetIndex);
@@ -166,6 +287,7 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 		historyGetIndex = historyGetIndex-1;
 		return commandHistory.get(historyGetIndex);
 	}
+
 	public String getPrevCommand_down()
 	{
 		logging.debug(this, "getPrevCommand_down historySize " + commandHistory.size() + " getIndex " + historyGetIndex);
@@ -185,7 +307,6 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 		return output;
 	}
 
-	private boolean passwordMode = false;
 	private void initGUI()  	
 	{
 		logging.info(this, "initGUI ");
@@ -195,14 +316,14 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 			{
 				super.addNotify();
 				requestFocusInWindow();
+				setCLfocus();
 			}
 		}; 
 		tf_command.setPreferredSize(new Dimension( de.uib.configed.Globals.firstLabelWidth + de.uib.configed.Globals.gapSize, de.uib.configed.Globals.lineHeight));
 
 		
-		((Component) tf_command).requestFocusInWindow();
-		((JTextField) tf_command).requestFocus();
-		((JTextField) tf_command).setCaretPosition(((JTextField) tf_command).getText().length());
+		setCLfocus();
+		//((JTextField) tf_command).setCaretPosition(((JTextField) tf_command).getText().length());
 
 		cb_privat = new JCheckBox(configed.getResourceValue("SSHConnection.passwordButtonText"));
 		cb_privat.setPreferredSize(btn_dim);
@@ -224,6 +345,7 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 							setAutocompleteList(terminal.commands_compgen);
 						passwordMode=true;
 					}
+					setCLfocus();
 				}
 			});
 		changeEchoChar((char)0);
@@ -246,19 +368,6 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 					((SSHCommandControlParameterMethodsPanel)parameterPanel).doActionParamAdd((JTextComponent) tf_command);
 				}
 			});
-		// btn_changeHelpPanelStatus= new de.uib.configed.gui.IconButton(
-		// 	de.uib.configed.configed.getResourceValue("SSHConnection.CommandControl.btnShowActionHelp") ,
-		// 	"images/help.gif", "images/help.gif", "images/help.gif",true
-		// );
-		// btn_changeHelpPanelStatus.setPreferredSize(btn_dim);
-		// if (!(de.uib.configed.Globals.isGlobalReadOnly()))
-		// 	btn_changeHelpPanelStatus.addActionListener(new ActionListener()
-		// 	{
-		// 		public void actionPerformed(ActionEvent e)
-		// 		{
-		// 			showPanel();
-		// 		}
-		// 	});
 		btn_killProcess= new de.uib.configed.gui.IconButton(
 			de.uib.configed.configed.getResourceValue("SSHConnection.buttonKillProcess") ,
 			"images/edit-delete.png", "images/edit-delete.png", "images/edit-delete.png",true
@@ -269,7 +378,7 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 
 		btn_executeCommand= new de.uib.configed.gui.IconButton(
 			de.uib.configed.configed.getResourceValue("SSHConnection.CommandControl.btnExecuteCommand") ,
-			"images/execute.png", "images/execute.png", "images/execute.png",true
+			"images/execute_blue.png", "images/execute_blue.png", "images/execute_blue.png",true
 		);
 		btn_executeCommand.setPreferredSize(btn_dim);
 		if (!(de.uib.configed.Globals.isGlobalReadOnly()))
@@ -281,14 +390,15 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 					if (terminal != null) 
 					{
 						terminal.exec(text);
-						((Component) getInputField()).requestFocusInWindow();
 						getInputField().setText("");
+						setCLfocus();
 					}
 				}
 			});
 		
 		try{
 			createLayout();
+			setCLfocus();
 		} catch (java.lang.NullPointerException npe)
 		{
 			logging.error("NullPointerException in createLayout ");
@@ -301,11 +411,9 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 			logging.error("looks like a thread problem");
 			logging.error("" + e);
 		}
-		this.setSize(this.getWidth(), this.getHeight() + parameterPanel.getHeight() );
+		//this.setSize(this.getWidth(), this.getHeight() + parameterPanel.getHeight() );
 		setCenterLayout();
-		this.helpPanelStatus = false;
 	}
-	private Autocomplete autoComplete;
 	public void setAutocompleteList(java.util.List<String> list)
 	{
 		if (list == null) return;
@@ -325,57 +433,35 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 			tf_command.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
 		}
 	}
+
 	public void removeAutocompleteListener()
 	{
 		if (autoComplete != null) tf_command.getDocument().removeDocumentListener( autoComplete );
 	}
-
-	private void showPanel() 
-	{
-		logging.info(this, "showPanel helpPanelStatus " + helpPanelStatus);
-		if (this.helpPanelStatus)
-		{
-			setCenterLayout();
-			this.mainPanel.setSize(this.mainPanel.getWidth(), this.mainPanel.getHeight() + this.parameterPanel.getHeight() );
-			this.setSize(this.getWidth(), this.getHeight() + this.parameterPanel.getHeight() );
-		}
-		else 
-		{
-			setCenterLayout();
-			this.mainPanel.setSize(this.mainPanel.getWidth(), this.mainPanel.getHeight()-this.parameterPanel.getHeight());
-			this.setSize(this.getWidth(), this.getHeight()-this.parameterPanel.getHeight());
-		}
-		this.helpPanelStatus = !this.helpPanelStatus;
-		this.repaint();
-		this.revalidate();
-	}
-
+	
+	
 	protected void createLayout()
 	{
 		logging.info(this, "createLayout ");
-		int pref = GroupLayout.PREFERRED_SIZE;
-		int max = Short.MAX_VALUE;
+		jScrollPane.setPreferredSize(output.getMaximumSize());
+		
 		GroupLayout.Alignment leading = GroupLayout.Alignment.LEADING;
 		int gap = de.uib.configed.Globals.gapSize;
 		int mgap = de.uib.configed.Globals.minGapSize;
 		
+		lbl_command = new JLabel(configed.getResourceValue("SSHConnection.commandLine"));
+		
 		konsolePanelLayout.setVerticalGroup(konsolePanelLayout.createSequentialGroup()
 			.addGap(gap)
-			.addComponent(jScrollPane,pref, pref,max)
+			.addComponent(jScrollPane,GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
 			.addGap(gap)
-			.addGroup(konsolePanelLayout.createParallelGroup()
-				.addGap(gap)
-				// .addComponent(btn_changeHelpPanelStatus,pref, pref,pref )
-				.addComponent(cb_privat,pref, pref,pref )
-				.addGroup(konsolePanelLayout.createSequentialGroup()
-					// .addGap(2)
-					.addComponent(tf_command,pref, pref,pref )
-				)
-				.addGap(gap)
-				.addComponent(btn_executeCommand,pref, pref,pref )
-				.addComponent(btn_killProcess,pref, pref,pref )
-				.addComponent(btn_close,pref, pref,pref )
-				.addGap(gap)
+			.addGroup(konsolePanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+				.addComponent(lbl_command,GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addComponent(cb_privat, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addComponent(tf_command,  GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addComponent(btn_executeCommand, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addComponent(btn_killProcess, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addComponent(btn_close, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
 			)
 			.addGap(gap)
 		);
@@ -383,47 +469,46 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 		konsolePanelLayout.setHorizontalGroup(konsolePanelLayout.createParallelGroup()
 			.addGroup(konsolePanelLayout.createSequentialGroup()
 				.addGap(gap)
-				.addComponent(jScrollPane,pref, pref,max)
+				.addComponent(jScrollPane,GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
 				.addGap(gap)
 			)
 			.addGroup(konsolePanelLayout.createSequentialGroup()
 				.addGap(gap)
-				// .addComponent(btn_changeHelpPanelStatus,pref, pref,pref )
-				.addComponent(cb_privat,pref, pref,pref )
-				.addComponent(tf_command,pref, pref,max)
+				.addComponent(lbl_command, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
+				.addComponent(cb_privat, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,GroupLayout.PREFERRED_SIZE )
 				.addGap(gap)
-				.addComponent(btn_executeCommand,pref, pref,pref )
-				.addComponent(btn_killProcess,pref, pref,pref )
-				.addComponent(btn_close,pref, pref,pref )
+				.addComponent(tf_command, de.uib.configed.Globals.buttonWidth, de.uib.configed.Globals.buttonWidth, Short.MAX_VALUE)
+				.addGap(gap)
+				.addComponent(btn_executeCommand, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth)
+				.addComponent(btn_killProcess, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth)
+				.addComponent(btn_close,de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth, de.uib.configed.Globals.iconWidth)
 				.addGap(gap)
 			)
 		);
 		setCenterLayout();
+		
 	}
+
 	private void setCenterLayout()
 	{
 		mainPanelLayout.setAutoCreateGaps(true);
-		if (this.helpPanelStatus)
-		{
-			mainPanelLayout.setHorizontalGroup( mainPanelLayout.createParallelGroup()
-				.addComponent(this.inputPanel)
-				.addComponent(this.parameterPanel)
-			);
-			mainPanelLayout.setVerticalGroup( mainPanelLayout.createSequentialGroup()
-				.addComponent(this.inputPanel)
-				.addComponent(this.parameterPanel)
-			);
-		}else
-		{
-			mainPanelLayout.setHorizontalGroup( mainPanelLayout.createParallelGroup()
-				.addComponent(this.inputPanel)
-			);
-			mainPanelLayout.setVerticalGroup( mainPanelLayout.createSequentialGroup()
-				.addComponent(this.inputPanel)
-			);
-		}
-		parameterPanel.setVisible(this.helpPanelStatus);
+		mainPanelLayout.setHorizontalGroup( mainPanelLayout.createParallelGroup()
+			.addComponent(this.inputPanel)
+			.addComponent(this.parameterPanel)
+			.addComponent(this.terminatingPanel)
+			
+		);
+		mainPanelLayout.setVerticalGroup( mainPanelLayout.createSequentialGroup()
+			.addComponent(this.inputPanel)
+			.addComponent(this.parameterPanel)
+			//.addGap(50)
+			.addComponent(this.terminatingPanel)
+		);
+		
+		this.setSize(this.getWidth(), this.getHeight() + this.parameterPanel.getHeight() + this.terminatingPanel.getHeight() );
+		this.revalidate();
 	}
+
 	public void changeEchoChar(char c)
 	{
 		// if (passwordMode) 
@@ -431,7 +516,5 @@ public class SSHConnectionTerminalDialog extends SSHConnectionOutputDialog
 		((JPasswordField)tf_command).setEchoChar(c);
 		logging.debug(this, "changeEchoChar checkbox set Selected " + passwordMode);
 		cb_privat.setSelected(passwordMode);
-
 	}
-
 }

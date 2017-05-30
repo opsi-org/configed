@@ -61,6 +61,13 @@ public class FLoadingWaiter extends JFrame
 		}
 	}
 	
+	public FLoadingWaiter(String title, String startMessage)
+	{
+		this(title);
+		observingMesg = startMessage;;
+	}
+	
+	
 	public FLoadingWaiter(String title)
 	{
 		super(title);

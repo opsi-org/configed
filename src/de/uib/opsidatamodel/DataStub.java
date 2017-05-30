@@ -72,7 +72,7 @@ public abstract class DataStub
 	abstract public void fillProductPropertyStates(Collection<String> clients);
 	abstract public java.util.List<Map<String, Object>> getProductPropertyStates();
 	
-	//abstract public void productPropertyDepotStatesRequestRefresh();
+	//abstract protected void productPropertyDepotStatesRequestRefresh();
 	//abstract public void fillProductPropertyDepotStates(Collection<String> clients);
 	abstract public java.util.List<Map<String, Object>> getProductPropertyDepotStates(java.util.Set<String> depots);
 	

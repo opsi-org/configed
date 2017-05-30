@@ -676,8 +676,14 @@ public class DataStubRawData extends DataStubNOM
 	@Override
 	protected void retrieveHostConfigs()
 	{
+		//logging.info(this, "retrieveHostConfigs (hostConfigs == null) " + (hostConfigs == null) );
+		//logging.info(this, "retrieveHostConfigs classCounter: (hostConfigs == null) " + classCounter + ": " + (hostConfigs == null) );
+		
 		if (hostConfigs != null)
 			return;
+		
+		logging.info(this, "retrieveHostConfigs classCounter:" + classCounter);
+		
 		
 		controller.notifyDataLoadingObservers(configed.getResourceValue("LoadingObserver.loadtable") + " config state");
 			

@@ -118,50 +118,42 @@ public class DefaultEditMapPanel extends AbstractEditMapPanel
 			this.optionsMap = optionsMap;
 		}
 		
-		mapTableModel.setOptions(this.optionsMap);
 		
 		
-		//this.descriptionsMap = descriptionsMap;
-		
-		//if (descriptionsMap == null
-		//defaultsMap
 		//derive from optionsMap, opsi 4.0
 		{
-			this.descriptionsMap = new HashMap<String, String>();
-			this.defaultsMap = new HashMap<String, Object>();
+			descriptionsMap = new HashMap<String, String>();
+			defaultsMap = new HashMap<String, Object>();
 			
 			if (optionsMap != null)
 			{
-				Iterator iter = optionsMap.keySet().iterator();
-				while (iter.hasNext())
+				for (String key : optionsMap.keySet())
 				{
-					String key = (String) iter.next();
 					//logging.debug(this, "optionsMap.get(key) is " + optionsMap.get(key));
-					String description = "";
+					String description = optionsMap.get(key).getDescription();
+					Object defaultvalue = optionsMap.get(key).getDefaultValues();
 					
-					if (optionsMap.get(key) instanceof Map)
-						description = (String) ((Map) optionsMap.get(key)).get("description");
+					descriptionsMap.put(key, description);
+					defaultsMap.put(key, defaultvalue);
+					
+					
 					/*
-					try{
-						description = (String) ((Map) optionsMap.get(key)).get("description");
-					}
-					catch(Exception ex)
-					{
-						logging.debug(this, "optionsMap.get(key) is not a map, " + ex);
-						//we should implement a getDescription method in ListCellOptions
-					}
+					logging.info(this, "key  " + key + " optionsMap.get(key)  " 
+						+ " class " + optionsMap.get(key).getClass() 
+						+ " optionsMap.get(key) instanceof Map " +  ((optionsMap.get(key)) instanceof Map)
+						+ " optionsMap.get(key) instanceof ListCellOptions " +  ((optionsMap.get(key)) instanceof ListCellOptions)
+						+ " optionsMap.get(key) instanceof DefaultListCellOptions " +  ((optionsMap.get(key)) instanceof DefaultListCellOptions)
+						+ " value " + optionsMap.get(key));
+					System.exit(0);
 					*/
-					//String description = "???";
-					//logging.debug(this, "key " + key + ", description " + description);
-					//Object defaultvalue = ((Map) optionsMap.get(key)).get("defaultValues");
-					Object defaultvalue = ((ListCellOptions) optionsMap.get(key)).getDefaultValues();
-					//logging.debug(this, "key " + key + ", default " + defaultvalue);
-					this.descriptionsMap.put(key, (String) description);
-					this.defaultsMap.put(key, defaultvalue);
 					
 				}
 			}
 		}
+		
+		mapTableModel.setOptions(optionsMap,
+			//for convenience we deliver defaultsMap
+			defaultsMap);
 		
 		
 		cancelOldCellEditing();

@@ -9,55 +9,62 @@ import de.uib.configed.gui.ssh.*;
 import de.uib.utilities.logging.*;
 
 
-public class CommandOpsiSetRights //extends Empty_Command
+public class CommandOpsiSetRights 
+extends SSHCommand_Template
+// extends Empty_Command
 /*extends*/ implements SSHCommand
-, SSHMultiCommand
+, SSHMultiCommand, SSHCommandNeedParameter
 {
 	private String baseName = "opsi-set-rights ";
 	private String command = "opsi-set-rights ";
 	protected FGeneralDialog dialog = null;
 	private boolean needSudo = true;
-	private boolean needParameter = false;
+	private boolean needParameter = true;
 	private boolean isMultiCommand = true;
 	private LinkedList<SSHCommand> ssh_command = new LinkedList<SSHCommand>();
+	private LinkedList<SSHCommand> ssh_command_original = new LinkedList<SSHCommand>();
+
 	// private int helpColumns = 2;
 	private int priority = 110;
 
 	private String dir = null;
 	public CommandOpsiSetRights()
 	{
-		super();
+		// super();
 		// command = "opsi-set-rights ";
 		command = "opsi-set-rights " + configed.getResourceValue("SSHConnection.command.opsisetrights.additionalPath") + " ";
 		ssh_command.add((SSHCommand) this);
 	}
 	public CommandOpsiSetRights(String d)
 	{
-		super();
+		// super();
 		setDir(d);
+		command = baseName + dir;
 
 		if (d.charAt(d.length()-1) != '/')
 			d = d + "/";
 
 		logging.info(this, "CommandOpsiSetRights dir " + dir);
 		ssh_command.add((SSHCommand) this);
+		ssh_command_original.add((SSHCommand) this);
 	}
+	private String mainName = "";
 	@Override
-	public boolean isMultiCommand()
-	{
-		return isMultiCommand;
-	}
+	public String getMainName()
+	{return mainName;}
+	public void setMainName(String n)
+	{ mainName = n;}
 	@Override
 	public String getId()
 	{
 		return "CommandOpsiSetRights";
 	}
 	
-	// @Override
-	// public String getBasicName()
-	// {
-	// 	return baseName;
-	// }
+	@Override
+	public String getBasicName()
+	{
+		return baseName;
+	}
 
 	@Override
 	public String getMenuText()
@@ -74,6 +81,19 @@ public class CommandOpsiSetRights //extends Empty_Command
 	{
 		return configed.getResourceValue("SSHConnection.command.opsisetrights.tooltip");
 	}
+	@Override
+	public String getSecureInfoInCommand()
+	{
+		return null;
+	}
+	@Override
+	public String getSecuredCommand()
+	{
+		if ( (getSecureInfoInCommand() != null) && (!getSecureInfoInCommand().trim().equals("")))
+			return 	getCommand().replace(getSecureInfoInCommand(), SSHCommandFactory.getInstance().confidential);
+		else return getCommand();
+	}
+
 	@Override
 	public String getCommand()
 	{
@@ -100,6 +120,8 @@ public class CommandOpsiSetRights //extends Empty_Command
 		}
 		return commands_string_list;
 	}
+	public LinkedList<SSHCommand> getOriginalCommands()
+	{ return ssh_command_original; }
 	@Override
 	public LinkedList<SSHCommand> getCommands()
 	{ return ssh_command; }
@@ -113,17 +135,32 @@ public class CommandOpsiSetRights //extends Empty_Command
 	{
 		return priority;
 	}
+
+	@Override
+	public boolean isMultiCommand()
+	{
+		return isMultiCommand;
+	}
 	@Override 
 	public boolean needParameter()
 	{
 		return needParameter;
 	}
 
-	public void setDir(String d)
-	{
-		if (d != "") dir = " " + d;
-		else dir = "";
-	}
+	// public void setCommands(LinkedList<String> c_list)
+	// {
+	// 	if (c_list !=  null)
+	// 	{
+	// 		for (String c: c_list)
+	// 		{
+	// 			SSHCommand sshc = new Empty_Command( getId(),  c,  getMenuText(),  needSudo());
+	// 			ssh_command.add(sshc);
+	// 			if (firstInitCommands)
+	// 				ssh_command_original.add(sshc);
+	// 		}
+	// 		firstInitCommands=false;
+	// 	}
+	// }
 	
 	/** 
 	* Sets the given command
@@ -191,8 +228,32 @@ public class CommandOpsiSetRights //extends Empty_Command
 	}
 
 	@Override
+	public void startParameterGui()
+	{
+		dialog = new SSHOpsiSetRightsParameterDialog(this);
+	}
+
+	@Override
+	public void startParameterGui(ConfigedMain main)
+	{
+		dialog = new SSHOpsiSetRightsParameterDialog(this);
+	}
+	
+	@Override
+	public SSHConnectionExecDialog startHelpDialog()
+	{return null;}
+	
+	@Override
 	public FGeneralDialog getDialog()
 	{
 		return dialog;
 	}
+
+	public void setDir(String d)
+	{
+		if (d != "") dir = " " + d;
+		else dir = "";
+	}
+	public String getDir()
+	{return dir;}
 }

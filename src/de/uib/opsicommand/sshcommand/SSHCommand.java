@@ -26,6 +26,10 @@ public abstract interface SSHCommand
 	// private SSHCommand instance;
 	/** @return command String to execute **/
 	public abstract String getCommand();
+	public abstract String getSecuredCommand();
+	// public abstract boolean hasSecureInfoInCommand();
+	public abstract String getSecureInfoInCommand();
+
 	/** @return raw command String **/
 	public abstract String getCommandRaw();
 	/** @returnlist of parameter-Ersatz **/
@@ -53,4 +57,6 @@ public abstract interface SSHCommand
 	// public abstract int getHelpColumns();
 	/** @return the command dialog(parameter)**/
 	public abstract FGeneralDialog getDialog();
+	
+	public abstract String get_ERROR_TEXT(); 
 }

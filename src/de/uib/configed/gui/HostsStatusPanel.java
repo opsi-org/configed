@@ -96,7 +96,8 @@ public class HostsStatusPanel extends JPanel
 	public void updateValues
 		(Integer clientsCount, Integer selectedClientsCount, String selectedClientNames, String involvedDepots)
 	{
-		logging.info(this, "updateValues clientsCount, selectedClientsCount, selectedClientNames, involvedDepots "
+		logging.info(this, "updateValues clientsCount, selectedClientsCount " + clientsCount + ", " + selectedClientsCount);
+		logging.debug(this, "updateValues clientsCount, selectedClientsCount, selectedClientNames, involvedDepots "
 			+ clientsCount + ", " + selectedClientsCount + ", " + selectedClientNames + ", " + involvedDepots );
 		resetReportedGroup();
 		

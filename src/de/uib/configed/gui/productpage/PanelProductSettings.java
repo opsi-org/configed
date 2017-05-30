@@ -1226,8 +1226,8 @@ implements RowSorterListener
 		
 		infoPane.setSpecificPropertiesExisting(specificPropertiesExisting);
 		
-		
-		logging.info(this, "initEditing, " 	+ " editableProductProperties  " +  (editableProductProperties) + " productpropertyOptionsMap  " + (productpropertyOptionsMap) );
+		Globals.checkCollection(this, "initEditing", "editableProductProperties ", editableProductProperties);
+		Globals.checkCollection(this, "initEditing", "productpropertyOptionsMap", productpropertyOptionsMap);
 		
 		propertiesPanel.setEditableMap( 
 			

@@ -24,7 +24,7 @@ public abstract class OpsiDataMatcher
 	public boolean doesMatch( Client client )
 	{
 		OpsiDataClient oClient = (OpsiDataClient) client;
-		//logging.debug(this, "doesMatch client " + oClient);
+		logging.debug(this, "doesMatch client " + oClient);
 		//logging.debug(this, "doesMatch interesting map, key  "   + map + ", " + key);
 		Map realMap = oClient.getMap( map );
 		//logging.debug( this, "doesMatch " + realMap.toString() );

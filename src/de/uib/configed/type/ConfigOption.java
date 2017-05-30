@@ -25,12 +25,12 @@ public class ConfigOption extends RetrievedMap
 	{
 		//overwrite values
 		if  (retrieved == null || retrieved.get("possibleValues") == null)
-			put("possibleValues", new ArrayList());
+			put("possibleValues", new ArrayList<Object>());
 		else
 			put("possibleValues", retrieved.get("possibleValues"));
 		
 		if  (retrieved == null || retrieved.get("defaultValues") == null)
-			put("defaultValues", new ArrayList());
+			put("defaultValues", new ArrayList<Object>());
 		else
 			put("defaultValues", retrieved.get("defaultValues"));
 		
@@ -107,6 +107,11 @@ public class ConfigOption extends RetrievedMap
 	public boolean isEditable()
 	{
 		return (Boolean) get("editable");
+	}
+	
+	public String getDescription()
+	{
+		return  (String) get("description");
 	}
 	
 	
